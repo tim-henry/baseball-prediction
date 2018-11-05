@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 import os
+from sklearn import preprocessing
 
-colNames = ['Date', 'Home_GameNum', 'Day', 'Visitor_Name', 'Visitor_League', 'Visitor_GameNum', 'Home_Name', 'Home_League',
-            'HomeGameNum', 'Visitor_Runs', 'Home_Runs', 'GameLength', 'Day/Night', 'CompletionInf', 'ForfeitInf',
+colNames = ['Date', 'GameNum', 'Day', 'Visitor_Name', 'Visitor_League', 'Visitor_GameNum', 'Home_Name', 'Home_League',
+            'Home_GameNum', 'Visitor_Runs', 'Home_Runs', 'GameLength', 'Day/Night', 'CompletionInf', 'ForfeitInf',
             'ProtestInf', 'ParkID', 'Attendance', 'TimeOfGame', 'Vistor_LineScores', 'Home_LineScores',
             'Visitor_at-bats', 'Visitor_hits', 'Visitor_doubles', 'Visitor_triples', 'Visitor_Homeruns', 'Visitor_RBI',
             'Visitor_SacrificeHits', 'Visitor_SacrificeFlies', 'Visitor_hit-by-pitch', 'Visitor_walks',
@@ -46,6 +47,10 @@ def drop_data(dropbox_dir, featured_dir):
     """
     Here we erase statistics that are not game-level. Includes umpire information, pitcher/batter information,
     manager information. Want to focus purely on game-level stats for our model.
+
+    TODO: Instead of just saving these vanilla, want to create a single dataframe for each season. Make sure not
+    to double-count games by assigning a new column, gameID.
+        This column should be concatenation of Date, Visitor_name, home_name, game_num.
     """
 
     raw_data_dir = 'data_raw_team/'
@@ -54,6 +59,8 @@ def drop_data(dropbox_dir, featured_dir):
 
     for year in os.listdir(dropbox_dir+raw_data_dir):
         print("Working on files in: {}".format(year))
+        year_df = pd.DataFrame()
+        out_dir = dropbox_dir + featured_dir + year + '.txt'
         for team in os.listdir(dropbox_dir + raw_data_dir + year):
             data_filename = dropbox_dir + raw_data_dir + year + '/' + team
             # print(data_filename)
@@ -61,11 +68,15 @@ def drop_data(dropbox_dir, featured_dir):
                 team_df = pd.read_csv(f, names = colNames)
                 #Drop the relevant columns from the dataframe.
                 team_df = team_df.drop(np.array(colNames)[to_drop], axis=1)
+                # team_df['GAMEID'] = team_df['Date'] + '_' + team_df['Visitor_Name'] + '_' + team_df['Home_Name'] + '_' + team_df['GameNum']
+                team_df['Date'] = pd.to_datetime(team_df['Date'], format = '%Y%m%d')
                 #WRITE TO OUT DATAFRAME.
-                out_dir = dropbox_dir + featured_dir + year + '/'
-                if not os.path.exists(out_dir):
-                    os.makedirs(out_dir)
-                team_df.to_csv(out_dir + team)
+                # if not os.path.exists(out_dir):
+                #     os.makedirs(out_dir)
+                # team_df.to_csv(out_dir + team)
+                year_df = year_df.append(team_df)
+        year_df = year_df.drop_duplicates()
+        year_df.to_csv(out_dir)
 
 def featurize_data(dropbox_dir, featured_dir, std=True):
     """
@@ -73,8 +84,28 @@ def featurize_data(dropbox_dir, featured_dir, std=True):
     STD: boolean to control whether data is normalized to std. Gaussian or minmax normalization.
 
     """
+    to_one_hot = [1, 2, 3, 4, 5, 7, 8, 13, 15, 16, 17]
+    # to_one_hot = [0, 1, 2, 3, 4, 6, 7, 12, 14, 15, 16] #list of categorical columns. From data description list
 
-    to_one_hot = 
+    for year in os.listdir(dropbox_dir+featured_dir):
+        print("Working on files in: {}".format(year))
+        for team in os.listdir(dropbox_dir + featured_dir + year):
+            data_filename = dropbox_dir + featured_dir + year + '/' + team
+            # print(data_filename)
+            with open(data_filename) as f:
+                team_df = pd.read_csv(f, names=colNames)
+
+                dropped_df = team_df.drop(np.array(colNames[to_one_hot]), axis=1)
+                vals_to_std = dropped_df.values
+                if std:
+                    scaler = preprocessing.StandardScaler()
+                else:
+                    scaler = preprocessing.MinMaxScaler()
+                vals_scaled = scaler.fit_transform(vals_to_std)
+                std_df = pd.DataFrame(vals_scaled, columns = dropped_df.columns)
+
+                team_df.to_csv(data_filename)
+
 
 
 def prepare_data(dropbox_dir, reclean = True, refeature = True):
@@ -104,4 +135,4 @@ if __name__ == "__main__":
         team = pd.read_csv(f)
         print(team.shape)
     # print(os.listdir(dropbox_dir))
-    prepare_data(dropbox_dir)
+    prepare_data(dropbox_dir, refeature = False)
