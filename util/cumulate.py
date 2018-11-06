@@ -24,7 +24,7 @@ def cumulative(teamName = 'BOS', gameNumber = 20):
 		return(None)
 	else:
 		try:
-			df = pd.read_csv(datapath + teamName + '.csv').iloc[0:gameNumber,:]
+			df = pd.read_csv(datapath + teamName + '.csv').iloc[0:gameNumber-1,:]
 
 			colNames = df.columns
 
@@ -32,7 +32,7 @@ def cumulative(teamName = 'BOS', gameNumber = 20):
 				if (colNames[k] in leavout) or ('opp_' in colNames[k]):
 					df = df.drop(colNames[k], axis = 1)
 
-			avs = df.sum(axis = 0).values / gameNumber
+			avs = df.sum(axis = 0).values / (gameNumber)
 
 			colNames = df.columns
 
@@ -79,6 +79,19 @@ def add_cumulatives(teamName = 'BOS'):
 	out = pd.concat([df, newDF], axis=1)
 
 	return(out)
+
+
+def trim_to_cum(df):
+	colNames = df.columns.values
+
+	for k, name in enumerate(colNames):
+		if (not ('isWin' in name)) and (not('cum' in name) and (not ('isHome' in name))):
+			df = df.drop(colNames[k], axis = 1)
+	return(df)
+
+
+
+
 
 def main():
 
