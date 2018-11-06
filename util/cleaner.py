@@ -48,7 +48,7 @@ colNames = ['Date', 'GameNum', 'Day', 'Visitor_Name', 'Visitor_League', 'Visitor
 meta = ['Name', 'GameNum']
 
 # Note 'SacrificeFlies', deleted, inconsistent # of cols
-data =['at-bats', 'hits', 'doubles', 'triples', 'Homeruns', 'RBI',
+data =['Runs', 'at-bats', 'hits', 'doubles', 'triples', 'Homeruns', 'RBI',
             'SacrificeHits', 'hit-by-pitch', 'walks',
             'intentionalWalks', 'strikeouts', 'StolenBases', 'CaughtStealing',
             'GroundedIntoDoublePlays', 'AwardedFirstOnCatcherInterference', 'LeftOnBase',
