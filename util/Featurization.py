@@ -97,22 +97,17 @@ def drop_data(dropbox_dir, featured_dir):
 
 def featurize_data(dropbox_dir, featured_dir, std=True):
     """
-    Function to standardize data and turn categorical variables into one-hot encodings.
-    STD: boolean to control whether data is normalized to std. Gaussian or minmax normalization.
-
+    Function to standardize data.
+    Std = True for standard Gaussian, False for min/max standardization
+    Saves concatenated and standardized dataframe in CUM_CONCAT/CUM_CONCAT.csv
     """
-    # to_one_hot = [1, 2, 3, 4, 5, 7, 8, 13, 15, 16, 17]
-    # to_one_hot = [0, 1, 2, 3, 4, 6, 7, 12, 14, 15, 16] #list of categorical columns. From data description list
     total = pd.DataFrame()
     for year in os.listdir(dropbox_dir+featured_dir):
         print("Working on files in: {}".format(year))
         for team in os.listdir(dropbox_dir + featured_dir + year):
             data_filename = dropbox_dir + featured_dir + year + '/' + team
-            # print(data_filename)
             with open(data_filename) as f:
                 team_df = pd.read_csv(f).dropna()
-
-                # dropped_df = team_df.drop(np.array(colNames[to_one_hot]), axis=1)
                 to_std = team_df[np.array(cumColNames)]
                 vals_to_std = to_std.values
                 if std:
@@ -121,17 +116,13 @@ def featurize_data(dropbox_dir, featured_dir, std=True):
                     scaler = preprocessing.MinMaxScaler()
                 vals_scaled = scaler.fit_transform(vals_to_std)
                 team_df[np.array(cumColNames)] = vals_scaled
-                # std_df = pd.DataFrame(vals_scaled, columns = to_std.columns)
-                # print(team_df.head(1))
                 total = total.append(team_df)
-                # team_df.to_csv(data_filename)
+
     cols_to_keep = ['isWin', 'isHome'] + cumColNames
-    # print(list(total.columns))
-    # print(total[cols_to_keep])
     total = total[cols_to_keep]
-    cols_to_drop = ['cum_isWin', 'cum_isHome', 'cum_GameNum',
-                    'opp_cum_isWin', 'opp_cum_isHome', 'opp_cum_GameNum']
-    total = total.drop(cols_to_drop)
+    # cols_to_drop = ['cum_isWin', 'cum_isHome', 'cum_GameNum',
+    #                 'opp_cum_isWin', 'opp_cum_isHome', 'opp_cum_GameNum']
+    # total = total.drop(cols_to_drop)
     total.to_csv(dropbox_dir + "CUM_CONCAT/CUM_CONCAT.csv")
 
 
