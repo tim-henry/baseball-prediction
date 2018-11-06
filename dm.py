@@ -54,8 +54,7 @@ def filterDF(df, by = 'team', ID = 'NYA'):
 					opponentList.append(df.iloc[row,idx_homeTeamName])
 					homeList.append(0)
 					teamScoreList.append(df.iloc[row,idx_visitorScore])
-					opponentScoreLipwd
-					st.append(df.iloc[row,idx_homeScore])
+					opponentScoreList.append(df.iloc[row,idx_homeScore])
 
 				if df.iloc[row,idx_homeTeamName] == ID:
 					#the team is playing at home
