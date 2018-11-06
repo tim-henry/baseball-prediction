@@ -84,7 +84,7 @@ def add_cumulatives(teamName = 'BOS'):
 def trim_to_cum(df):
 	colNames = df.columns.values
 
-	for k, name in enumerate(colNames):
+	for k,name in enumerate(colNames):
 		if (not ('isWin' in name)) and (not('cum' in name) and (not ('isHome' in name))):
 			df = df.drop(colNames[k], axis = 1)
 	return(df)
