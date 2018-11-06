@@ -37,7 +37,7 @@ def cumulative(teamName = 'BOS', gameNumber = 20):
 			colNames = df.columns
 
 			av = pd.DataFrame([avs],columns = colNames)
-			#av.iloc[0,:] = avs
+			#av.iloc[0,:] = a  vs
 			return(av)
 		except:
 			return(None)
@@ -91,6 +91,53 @@ def trim_to_cum(df):
 
 
 
+def naive(df):
+	df = df.iloc[1:,:]
+	keep = ['isWin', 'cum_isWin', 'opp_cum_isWin']
+	colNames = df.columns.values
+
+	for k,name in enumerate(colNames):
+		if (not (name in keep)):
+			df = df.drop(colNames[k], axis = 1)
+
+	predictions = []
+
+	for row in range(0,df.shape[0]):
+		if (df['cum_isWin'].values[row] >= df['opp_cum_isWin'].values[row]):
+			predictions.append(1)
+		else:
+			predictions.append(0)
+
+	predictions = np.array(predictions)
+
+	actuals = np.array(df['isWin'])
+
+	numWrong = np.sum(np.abs(predictions - actuals))
+
+	numRight = len(predictions) - numWrong
+
+	accuracy = numRight / len(predictions)
+	return(accuracy)
+
+def accuracies(source = destination):
+	names = os.listdir(source)
+	names_filtered = []
+	for k in range(0,len(names)):
+		if '.csv' in names[k]:
+			names_filtered.append(names[k])
+	names = names_filtered
+
+	accuracies = []
+
+	for k,name in enumerate(names):
+		team = str(name.replace('.csv',''))
+		df = pd.read_csv(source + team + '.csv')
+		accuracies.append(naive(df))
+
+	return(accuracies)
+
+
+
 
 
 def main():
@@ -113,6 +160,7 @@ def main():
 		newDF.to_csv(destination + team + '.csv')
 
 if __name__ == '__main__':
-	main()
+	#main()
+	print('Accuracies: ' + str(np.mean(accuracies())))
 
 
