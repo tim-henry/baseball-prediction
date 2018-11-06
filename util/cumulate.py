@@ -50,7 +50,6 @@ def add_cumulatives(teamName = 'BOS'):
 
 	for row in range(1,df.shape[0]):
 		teamCumulative = cumulative(teamName = teamName, gameNumber = int(df['GameNum'][row]))
-
 		oppCumulative = cumulative(teamName = df['opp_Name'][row], gameNumber = int(df['opp_GameNum'][row]))
 
 		if not((oppCumulative is None) or (teamCumulative is None)):
