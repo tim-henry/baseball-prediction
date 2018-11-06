@@ -7,7 +7,7 @@ import os
 
 #---------------------------------------------------
 
-datapath = '../data/GL1998/'
+datapath = '../data/GL2004/'
 destination = '../data/dest/'
 leavout  = ['Name','opp_Name']
 #df.drop('b', axis=1)
