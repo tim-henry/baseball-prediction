@@ -56,21 +56,21 @@ data =['Runs', 'at-bats', 'hits', 'doubles', 'triples', 'Homeruns', 'RBI',
             'Balks', 'putouts', 'assists', 'errors', 'PassedBalls',
             'doublePlays', 'TriplePlays']
 
-home_out_cols = ['Home_' + x for x in meta] \
+home_out_cols = ['isWin', 'isHome'] \
+           + ['Home_' + x for x in meta] \
            + ['Visitor_' + x for x in meta] \
-           + ['isHome'] \
            + ['Home_' + x for x in data] \
            + ['Visitor_' + x for x in data]
 
-visitor_out_cols = ['Visitor_' + x for x in meta] \
+visitor_out_cols = ['isWin', 'isHome'] \
+           + ['Visitor_' + x for x in meta] \
            + ['Home_' + x for x in meta] \
-           + ['isHome'] \
            + ['Visitor_' + x for x in data] \
            + ['Home_' + x for x in data]
 
-out_col_names = meta \
+out_col_names = ['isWin', 'isHome'] \
+           + meta \
            + ['opp_' + x for x in meta] \
-           + ['isHome'] \
            + data \
            + ['opp_' + x for x in data]
 
@@ -86,11 +86,17 @@ def nameCols(df):
 def clean_season(season, out_dir, team_name):
     n = season.shape[0]
 
-    # append isHome binary indicator
+    # append isHome binary indicator, isWin binary indicator
     is_home = pd.DataFrame(data=np.zeros((n, 1)), columns=["isHome"])
+    is_win = pd.DataFrame(data=np.zeros((n, 1)), columns=["isWin"])
     for index, row in season.iterrows():
-        is_home.iloc[index] = 1 if season.loc[index, "Home_Name"] == team_name else 0
-    season = pd.concat([season, is_home], axis=1)
+        if season.loc[index, "Home_Name"] == team_name:
+            is_home.iloc[index] = 1
+            is_win.iloc[index] = 1 if season.loc[index, "Home_Runs"] > season.loc[index, "Visitor_Runs"] else 0
+        else:
+            is_home.iloc[index] = 0
+            is_win.iloc[index] = 1 if season.loc[index, "Home_Runs"] < season.loc[index, "Visitor_Runs"] else 0
+    season = pd.concat([season, is_home, is_win], axis=1)
 
     # remove/reorganize columns
     clean_data = pd.DataFrame(data=np.full((n, len(home_out_cols)), np.nan, dtype=np.double))
@@ -130,4 +136,4 @@ def parse_all(in_dir, out_dir):
 
 if __name__ == "__main__":
     dropbox_dir = "/Users/timhenry/Dropbox (MIT)/6.867/"
-    parse_all(dropbox_dir + "data_raw_team", dropbox_dir + "data_clean_csv")
+    parse_all(dropbox_dir + "data_raw_team", dropbox_dir + "data_clean_csv_wins")
