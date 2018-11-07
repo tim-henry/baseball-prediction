@@ -4,10 +4,11 @@ import time
 
 import pandas as pd
 import numpy as np
+import graphviz
 
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import GradientBoostingClassifier
@@ -17,16 +18,31 @@ from sklearn.naive_bayes import GaussianNB
 # ===============================================================================
 
 
-name_to_model = {
-    "Naive Bayes": GaussianNB(),
-    "Logistic Regression": LogisticRegression(),
-    "Multi Layer Perceptron": MLPClassifier(alpha=1),
-    "Gradient Boosting Classifier": GradientBoostingClassifier(n_estimators=1000),
-    "Linear SVM": SVC(),
-    "Nearest Neighbors": KNeighborsClassifier(),
-    "Decision Tree": DecisionTreeClassifier(),
-    'Logistic LASSO CV': LogisticRegressionCV(Cs = 10, cv = 5, penalty = 'l1', solver='saga')
-}
+name_to_model = {'Logistic LASSO CV': LogisticRegressionCV(Cs=20, penalty='l1', solver='saga')
+                 }
+# criteria = ["gini", "entropy"]
+# splitters = ["random"]
+max_depth = [x for x in range(3, 11, 10)]
+max_features = [x for x in range(30, 31, 10)]
+# for c in criteria:
+#     for s in splitters:
+# "DT: c: " + c + ", s:" + s +
+for d in max_depth:
+    for f in max_features:
+        name =  ", d: " + str(d) + ", f: " + str(f)
+        name_to_model[name] = DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=d, max_features=f)
+    # "Naive Bayes": GaussianNB(),
+    # "Logistic Regression": LogisticRegression(),
+    # "Multi Layer Perceptron": MLPClassifier(alpha=1),
+    # "Gradient Boosting Classifier": GradientBoostingClassifier(n_estimators=1000),
+    # "Linear SVM": SVC(),
+    # "Nearest Neighbors": KNeighborsClassifier(),
+    # "Decision Tree": DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=3, max_features=3),
+    # "Decision Tree": DecisionTreeClassifier(),
+    # "Decision Tree": DecisionTreeClassifier(),
+    # "Decision Tree": DecisionTreeClassifier(),
+    # "Decision Tree": DecisionTreeClassifier(),
+# }
 
 dropbox_dirs = {
     'Abi':   expanduser("~/Documents/Dropbox/6.867/"),
@@ -39,15 +55,36 @@ colnames = []
 # ===============================================================================
 
 
+def diff_space(df):
+    '''
+    Put a dataframe into diff space
+    '''
+    Y = df['isWin']
+
+    X = df.drop('isWin', axis=1)
+
+    nVars = int(X.shape[1]/2)
+
+    XTeam = X.iloc[:,0:nVars]
+    XOpp = X.iloc[:,nVars:]
+
+    XDiff = pd.DataFrame(XTeam.values - XOpp.values)
+    XDiff.columns = list(XTeam)
+
+    nDF = pd.concat([Y, XDiff], axis=1).drop('cum_GameNum', axis=1)
+
+    return nDF
+
+
 def load_batch(full_name):
     global colnames
-    df = pd.read_csv(full_name)
-    colnames = df.columns[2:]
-    print("Colnames: {}".format(list(colnames)))
-    wpct = df.columns.get_loc("cum_isWin") - 1
-    opp_wpct = df.columns.get_loc("opp_cum_isWin") - 1
+    df = diff_space(pd.read_csv(full_name).drop('isHome', axis=1).iloc[:,1:])
+    colnames = df.columns[1:]
+    # print("Colnames: {}".format(list(colnames)))
+    wpct = 0#df.columns.get_loc("cum_isWin") - 1
+    opp_wpct = 0# df.columns.get_loc("opp_cum_isWin") - 1
 
-    array = df.values[:, 1:]
+    array = df.values#[:, 1:]
 
     np.random.shuffle(array)
 
@@ -64,13 +101,13 @@ def load_batch(full_name):
 def get_naive_accuracy(x_test, y_test, wpct, opp_wpct):
     correct = 0
     total = x_test.shape[0]
-
-    for i in range(x_test.shape[0]):
-        if x_test[i, wpct] >= x_test[i, opp_wpct] and y_test[i] == 1:
-            correct += 1
-        if x_test[i, wpct] < x_test[i, opp_wpct] and y_test[i] == 0:
-            correct += 1
-    return correct/total
+    return np.nan
+    # for i in range(x_test.shape[0]):
+    #     if x_test[i, wpct] >= x_test[i, opp_wpct] and y_test[i] == 1:
+    #         correct += 1
+    #     if x_test[i, wpct] < x_test[i, opp_wpct] and y_test[i] == 0:
+    #         correct += 1
+    # return correct/total
 
 
 def batch_classify(X_train, Y_train, X_test, Y_test, wpct, opp_wpct):
@@ -95,6 +132,14 @@ def batch_classify(X_train, Y_train, X_test, Y_test, wpct, opp_wpct):
         df.loc[i + 1] = [name, train_score, test_score, t_diff]
         df.to_csv("../data/classifier_accuracies.csv")
 
+        dot_data = export_graphviz(model, out_file=None,
+                         feature_names=colnames,
+                         class_names=["Loss", "Win"],
+                         filled=True, rounded=True,
+                         special_characters=True)
+        graph = graphviz.Source(dot_data)
+        graph.render("decision-tree")
+
     return df
 
 
@@ -105,12 +150,12 @@ def batch_train(model, x_train, y_train, x_test, y_test, wpct, opp_wpct):
     correct = 0
     total = x_test.shape[0]
 
-    for i in range(x_test.shape[0]):
-        if x_test[i, wpct] >= x_test[i, opp_wpct] and y_test[i] == 1:
-            correct += 1
-        if x_test[i, wpct] < x_test[i, opp_wpct] and y_test[i] == 0:
-            correct += 1
-    print("trivial", correct/total, "\n")
+    # for i in range(x_test.shape[0]):
+    #     if x_test[i, wpct] >= x_test[i, opp_wpct] and y_test[i] == 1:
+    #         correct += 1
+    #     if x_test[i, wpct] < x_test[i, opp_wpct] and y_test[i] == 0:
+    #         correct += 1
+    # print("trivial", correct/total, "\n")
 
 def log_lasso_cv(x_train, y_train, x_test, y_test):
     """
@@ -129,10 +174,16 @@ def log_lasso_cv(x_train, y_train, x_test, y_test):
     print("Score: {}".format(score))
 
     nonzero = np.where(coeffs != 0)[0]
+    nonzero = sorted(nonzero, key = lambda x: abs(coeffs[x]), reverse=True)
     print(nonzero)
 
-    print(colnames)
-    print(colnames[nonzero])
+    # print(colnames)
+    imp = colnames[nonzero]
+
+    imp = sorted(imp)
+
+    for cname, coeff_val in zip(imp, coeffs[nonzero]):
+        print('{} & {} \\\\'.format(cname.replace('cum_', ''), round(coeff_val, 5)))
     # best_C_index = list(model.Cs_).index(best_C)
     # averages = [np.mean(s) for s in scores]
     # print("Averages: {}".format(averages))
