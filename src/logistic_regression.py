@@ -1,11 +1,11 @@
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, expanduser
 import time
 
 import pandas as pd
 import numpy as np
 
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
@@ -25,14 +25,25 @@ name_to_model = {
     "Linear SVM": SVC(),
     "Nearest Neighbors": KNeighborsClassifier(),
     "Decision Tree": DecisionTreeClassifier(),
+    'Logistic LASSO CV': LogisticRegressionCV(Cs = 10, cv = 5, penalty = 'l1', solver='saga')
 }
 
+dropbox_dirs = {
+    'Abi':   expanduser("~/Documents/Dropbox/6.867/"),
+    'Tim':   "/Users/timhenry/Dropbox (MIT)/6.867/",
+    'Adam':  'FILL HERE'
+}
+
+colnames = []
 
 # ===============================================================================
 
 
 def load_batch(full_name):
+    global colnames
     df = pd.read_csv(full_name)
+    colnames = df.columns[2:]
+    print("Colnames: {}".format(list(colnames)))
     wpct = df.columns.get_loc("cum_isWin") - 1
     opp_wpct = df.columns.get_loc("opp_cum_isWin") - 1
 
@@ -101,13 +112,46 @@ def batch_train(model, x_train, y_train, x_test, y_test, wpct, opp_wpct):
             correct += 1
     print("trivial", correct/total, "\n")
 
+def log_lasso_cv(x_train, y_train, x_test, y_test):
+    """
+    Runs cross validation on logistic regression with l1 regularization.
+    Idea is to select best value for regularization parameter.
+    """
+
+    model = name_to_model['Logistic LASSO CV']
+
+    model.fit(x_train, y_train)
+    # best_C = model.C_
+    coeffs = model.coef_[0]
+    print(coeffs)
+
+    score = model.score(x_test, y_test)
+    print("Score: {}".format(score))
+
+    nonzero = np.where(coeffs != 0)[0]
+    print(nonzero)
+
+    print(colnames)
+    print(colnames[nonzero])
+    # best_C_index = list(model.Cs_).index(best_C)
+    # averages = [np.mean(s) for s in scores]
+    # print("Averages: {}".format(averages))
+    # print("Best: {}".format(model.C_))
+    # print("Best index: {}".format(best_C_index))
+    # print("SCORE: {}".format(score))
+    # print(model.coefs_paths_[1][best_C_index][-1])
+
 
 # =======================================================================================
 
 
 if __name__ == "__main__":
-    dropbox_dir = "/Users/timhenry/Dropbox (MIT)/6.867/"
+    username = 'Abi'
+
+
+    dropbox_dir = dropbox_dirs[username]
     in_dir = dropbox_dir + "CUM_CONCAT"
+
 
     path = in_dir
     if not isfile(path):
@@ -118,4 +162,6 @@ if __name__ == "__main__":
                 continue
 
             x_train, y_train, x_test, y_test, wpct, opp_wpct = load_batch(join(path, f))
-            batch_classify(x_train, y_train, x_test, y_test, wpct, opp_wpct)
+            # print(x_train)
+            # batch_classify(x_train, y_train, x_test, y_test, wpct, opp_wpct)
+            log_lasso_cv(x_train, y_train, x_test, y_test)
