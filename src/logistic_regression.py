@@ -43,7 +43,7 @@ def load_batch(full_name):
     global colnames
     df = pd.read_csv(full_name)
     colnames = df.columns[2:]
-    print("Colnames: {}".format(list(colnames)))
+    # print("Colnames: {}".format(list(colnames)))
     wpct = df.columns.get_loc("cum_isWin") - 1
     opp_wpct = df.columns.get_loc("opp_cum_isWin") - 1
 
@@ -129,10 +129,13 @@ def log_lasso_cv(x_train, y_train, x_test, y_test):
     print("Score: {}".format(score))
 
     nonzero = np.where(coeffs != 0)[0]
+    nonzero = sorted(nonzero, key = lambda x: abs(coeffs[x]))
     print(nonzero)
 
     print(colnames)
-    print(colnames[nonzero])
+    imp = colnames[nonzero]
+
+    imp = sorted(imp)
     # best_C_index = list(model.Cs_).index(best_C)
     # averages = [np.mean(s) for s in scores]
     # print("Averages: {}".format(averages))
