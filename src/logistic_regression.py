@@ -174,10 +174,13 @@ def log_lasso_cv(x_train, y_train, x_test, y_test):
     print("Score: {}".format(score))
 
     nonzero = np.where(coeffs != 0)[0]
+    nonzero = sorted(nonzero, key = lambda x: abs(coeffs[x]))
     print(nonzero)
 
     print(colnames)
-    print(colnames[nonzero])
+    imp = colnames[nonzero]
+
+    imp = sorted(imp)
     # best_C_index = list(model.Cs_).index(best_C)
     # averages = [np.mean(s) for s in scores]
     # print("Averages: {}".format(averages))
