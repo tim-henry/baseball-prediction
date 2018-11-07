@@ -5,7 +5,6 @@ import time
 import pandas as pd
 import numpy as np
 import graphviz
-import util
 
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.svm import SVC
@@ -19,7 +18,8 @@ from sklearn.naive_bayes import GaussianNB
 # ===============================================================================
 
 
-name_to_model = {}
+name_to_model = {'Logistic LASSO CV': LogisticRegressionCV(Cs=20, penalty='l1', solver='saga')
+                 }
 # criteria = ["gini", "entropy"]
 # splitters = ["random"]
 max_depth = [x for x in range(3, 11, 10)]
@@ -80,7 +80,7 @@ def load_batch(full_name):
     global colnames
     df = diff_space(pd.read_csv(full_name).drop('isHome', axis=1).iloc[:,1:])
     colnames = df.columns[1:]
-    print("Colnames: {}".format(list(colnames)))
+    # print("Colnames: {}".format(list(colnames)))
     wpct = 0#df.columns.get_loc("cum_isWin") - 1
     opp_wpct = 0# df.columns.get_loc("opp_cum_isWin") - 1
 
@@ -174,13 +174,16 @@ def log_lasso_cv(x_train, y_train, x_test, y_test):
     print("Score: {}".format(score))
 
     nonzero = np.where(coeffs != 0)[0]
-    nonzero = sorted(nonzero, key = lambda x: abs(coeffs[x]))
+    nonzero = sorted(nonzero, key = lambda x: abs(coeffs[x]), reverse=True)
     print(nonzero)
 
-    print(colnames)
+    # print(colnames)
     imp = colnames[nonzero]
 
     imp = sorted(imp)
+
+    for cname, coeff_val in zip(imp, coeffs[nonzero]):
+        print('{} & {} \\\\'.format(cname.replace('cum_', ''), round(coeff_val, 5)))
     # best_C_index = list(model.Cs_).index(best_C)
     # averages = [np.mean(s) for s in scores]
     # print("Averages: {}".format(averages))
@@ -194,7 +197,7 @@ def log_lasso_cv(x_train, y_train, x_test, y_test):
 
 
 if __name__ == "__main__":
-    username = 'Tim'
+    username = 'Abi'
 
 
     dropbox_dir = dropbox_dirs[username]
@@ -211,5 +214,5 @@ if __name__ == "__main__":
 
             x_train, y_train, x_test, y_test, wpct, opp_wpct = load_batch(join(path, f))
             # print(x_train)
-            batch_classify(x_train, y_train, x_test, y_test, wpct, opp_wpct)
-            # log_lasso_cv(x_train, y_train, x_test, y_test)
+            # batch_classify(x_train, y_train, x_test, y_test, wpct, opp_wpct)
+            log_lasso_cv(x_train, y_train, x_test, y_test)
