@@ -99,11 +99,13 @@ def main():
 	testVars = list(df.columns.values[1:])
 
 	testVars.remove('cum_GameNum')
+	testVars.remove('cum_isHome')
+	testVars.remove('cum_AwardedFirstOnCatcherInterference')
 
 	for test in testVars:
 		#print('Variable: ' + str(testNum))
 		pVals.append(indep_test(df, var1Col = 'isWin', var2Col = test))
-		print(test+ ' p-value: ' + str(round(pVals[-1], 5)))
+		print(test.replace('cum_','')+ ' & ' + str(round(pVals[-1], 5)) + "\\\\")
 
 	pVals = np.array(pVals)
 
@@ -111,7 +113,7 @@ def main():
 	res.loc[0] = pVals 
 
 	print(res)
-	print('Corrected Aggregate p-Value: ' + str(np.min(res.values) * len(pVals)))
+	print('Corrected Aggregate p-Value:\ ' + str(np.min(res.values) * len(pVals)))
 
 	res.to_csv('./pvals.csv')
 
