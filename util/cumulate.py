@@ -7,8 +7,12 @@ import os
 
 #---------------------------------------------------
 
-datapath = '../data/GL2004/'
-destination = '../data/dest/'
+#datapath = '../data/GL2004/'
+#destination = '../data/dest/'
+
+datapath = '../../ab6.867/data_clean_csv_wins/'
+destination = '../../ab6.867/data_clean_csv_wins_cumulated/'
+
 leavout  = ['Name','opp_Name']
 #df.drop('b', axis=1)
 featureBoundsL = 4
@@ -50,7 +54,7 @@ def addphrase(phrase, listOfStrings):
 	return(newListOfStrings)
 
 
-def add_cumulatives(teamName = 'BOS'):
+def add_cumulatives(teamName = 'BOS', datapath = datapath):
 	df = pd.read_csv(datapath + teamName + '.csv')
 
 	colNames = df.columns
@@ -67,6 +71,7 @@ def add_cumulatives(teamName = 'BOS'):
 	names.extend(oppnames)
 
 	newDF = pd.DataFrame(index = range(0,df.shape[0]), columns = names)
+	print('Cumulating: ' + teamName)
 
 	for row in range(1,df.shape[0]):
 		teamCumulative = cumulative(teamName = teamName, gameNumber = int(df['GameNum'][row]))
@@ -140,7 +145,7 @@ def accuracies(source = destination):
 
 
 
-def main():
+def main(destination = destination, datapath = datapath):
 
 	if not os.path.isdir(destination):
 		os.makedirs(destination)
@@ -152,15 +157,29 @@ def main():
 			names_filtered.append(names[k])
 	names = names_filtered
 
-
+	#print(datapath)
 	for k, name in enumerate(names):
 		team = str(name.replace('.csv',''))
-		newDF = add_cumulatives(teamName = team)
+		newDF = add_cumulatives(teamName = team, datapath = datapath)
 
 		newDF.to_csv(destination + team + '.csv')
 
 if __name__ == '__main__':
+
+	years = list(range(2005,2018))
+
+	for y , year in enumerate(years):
+		print('YEAR:    ' + str(year))
+		folder = 'GL' + str(year)
+
+		datapath = '../../ab6.867/data_clean_csv_wins/' + folder + '/'
+		destination = '../../ab6.867/data_clean_csv_wins_cumulated/' + folder + '/'
+
+		main(destination = destination, datapath = datapath)
+		#print(datapath + ' DOES NOT EXIST')
+
+		#print(folder)
 	#main()
-	print('Accuracies: ' + str(np.mean(accuracies())))
+	#print('Accuracies: ' + str(np.mean(accuracies())))
 
 
