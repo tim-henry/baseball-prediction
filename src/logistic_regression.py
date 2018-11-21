@@ -18,7 +18,7 @@ from sklearn.naive_bayes import GaussianNB
 # ===============================================================================
 
 
-name_to_model = {'Logistic LASSO CV': LogisticRegressionCV(Cs=20, penalty='l1', solver='saga')
+name_to_model = {'Logistic LASSO CV': LogisticRegressionCV(Cs=20, penalty='l1', solver='saga', max_iter = 1e4)
                  }
 # criteria = ["gini", "entropy"]
 # splitters = ["random"]
@@ -76,9 +76,14 @@ def diff_space(df):
     return nDF
 
 
-def load_batch(full_name):
+def load_batch(full_name, cols_to_drop):
     global colnames
-    df = diff_space(pd.read_csv(full_name).drop('isHome', axis=1).iloc[:,1:])
+    try:
+        df = diff_space(pd.read_csv(full_name).drop('isHome', axis=1).iloc[:,1:])
+    except ValueError:
+        df = pd.read_csv(full_name).iloc[:, 1:]
+
+    df = df.drop(cols_to_drop, axis=1)
     colnames = df.columns[1:]
     # print("Colnames: {}".format(list(colnames)))
     wpct = 0#df.columns.get_loc("cum_isWin") - 1
@@ -157,6 +162,7 @@ def batch_train(model, x_train, y_train, x_test, y_test, wpct, opp_wpct):
     #         correct += 1
     # print("trivial", correct/total, "\n")
 
+
 def log_lasso_cv(x_train, y_train, x_test, y_test):
     """
     Runs cross validation on logistic regression with l1 regularization.
@@ -201,18 +207,23 @@ if __name__ == "__main__":
 
 
     dropbox_dir = dropbox_dirs[username]
-    in_dir = dropbox_dir + "CUM_CONCAT"
+    in_dir = dropbox_dir + "CUM_CONCAT/"
 
+    concat_type = 'SeasAvg'
+    start_date = 2005
+    end_date = 2017
+    filename = 'CUM_CONCAT_{}_{}_{}.csv'.format(concat_type, start_date, end_date)
 
-    path = in_dir
-    if not isfile(path):
-        for f in listdir(path):
-            team_name, ext = f.split(".")
-            # ignore hidden files, etc.
-            if ext.lower() != "txt" and ext.lower() != "csv":
-                continue
+    cols_to_drop = ['cum_AwardedFirstOnCatcherInterference', 'cum_Balks', 'cum_CaughtStealing', 'cum_GroundedIntoDoublePlays']
+    # path = in_dir
+    # if not isfile(path):
+    #     for f in listdir(path):
+    #         team_name, ext = f.split(".")
+    #         # ignore hidden files, etc.
+    #         if ext.lower() != "txt" and ext.lower() != "csv":
+    #             continue
 
-            x_train, y_train, x_test, y_test, wpct, opp_wpct = load_batch(join(path, f))
-            # print(x_train)
-            # batch_classify(x_train, y_train, x_test, y_test, wpct, opp_wpct)
-            log_lasso_cv(x_train, y_train, x_test, y_test)
+    x_train, y_train, x_test, y_test, wpct, opp_wpct = load_batch(join(in_dir, filename), cols_to_drop = cols_to_drop)
+    # print(x_train)
+    # batch_classify(x_train, y_train, x_test, y_test, wpct, opp_wpct)
+    log_lasso_cv(x_train, y_train, x_test, y_test)

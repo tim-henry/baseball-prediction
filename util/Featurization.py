@@ -95,7 +95,31 @@ def drop_data(dropbox_dir, featured_dir):
         year_df = year_df.drop_duplicates()
         year_df.to_csv(out_dir)
 
-def featurize_data(dropbox_dir, featured_dir, std=True):
+
+def diff_space(df):
+    '''
+    Put a dataframe into diff space
+    '''
+    # print(df.columns)
+    Y = df[['isWin', 'isHome']]
+
+    X = df.drop(['isWin', 'isHome'], axis=1)
+
+    nVars = int(X.shape[1]/2)
+
+    XTeam = X.iloc[:, 0:nVars]
+    XOpp = X.iloc[:, nVars:]
+
+    # print(list(XTeam))
+
+    XDiff = pd.DataFrame(XTeam.values - XOpp.values)
+    XDiff.columns = list(XTeam)
+
+    nDF = pd.concat([Y.reset_index(drop=True), XDiff], axis=1).drop('cum_GameNum', axis=1)
+
+    return nDF
+
+def featurize_data(dropbox_dir, featured_dir, start_date = None, end_date = None, type_cum = '', std=True):
     """
     Function to standardize data.
     Std = True for standard Gaussian, False for min/max standardization
@@ -103,36 +127,50 @@ def featurize_data(dropbox_dir, featured_dir, std=True):
     """
     total = pd.DataFrame()
     for year in os.listdir(dropbox_dir+featured_dir):
-        print("Working on files in: {}".format(year))
-        for team in os.listdir(dropbox_dir + featured_dir + year):
-            data_filename = dropbox_dir + featured_dir + year + '/' + team
-            with open(data_filename) as f:
-                team_df = pd.read_csv(f).dropna()
-                to_std = team_df[np.array(cumColNames)]
-                vals_to_std = to_std.values
-                if std:
-                    scaler = preprocessing.StandardScaler()
-                else:
-                    scaler = preprocessing.MinMaxScaler()
-                vals_scaled = scaler.fit_transform(vals_to_std)
-                team_df[np.array(cumColNames)] = vals_scaled
-                total = total.append(team_df)
+        bef= True
+        aft = True
+        curr_year = int(year[-4:])
+        if start_date is not None:
+            bef = start_date <= curr_year
+        if end_date is not None:
+            aft = curr_year <= end_date
+        if bef and aft:
+            print("Working on files in: {}".format(str(curr_year)))
+            for team in os.listdir(dropbox_dir + featured_dir + year):
+                data_filename = dropbox_dir + featured_dir + year + '/' + team
+                with open(data_filename) as f:
+                    team_df = pd.read_csv(f).dropna()
+                    to_std = team_df[np.array(cumColNames)]
+                    vals_to_std = to_std.values
+                    if std:
+                        scaler = preprocessing.StandardScaler()
+                    else:
+                        scaler = preprocessing.MinMaxScaler()
+                    vals_scaled = scaler.fit_transform(vals_to_std)
+                    team_df[np.array(cumColNames)] = vals_scaled
+                    total = total.append(team_df)
 
     cols_to_keep = ['isWin', 'isHome'] + cumColNames
     total = total[cols_to_keep]
     # cols_to_drop = ['cum_isWin', 'cum_isHome', 'cum_GameNum',
     #                 'opp_cum_isWin', 'opp_cum_isHome', 'opp_cum_GameNum']
     # total = total.drop(cols_to_drop)
-    total.to_csv(dropbox_dir + "CUM_CONCAT/CUM_CONCAT.csv")
+    total = diff_space(total)
+    df_title = 'CUM_CONCAT_{}_{}_{}'.format(type_cum, str(start_date) if start_date is not None else '', str(end_date) if end_date is not None else '')
+    total.to_csv(dropbox_dir + "CUM_CONCAT/{}.csv".format(df_title))
 
 
 def prepare_data(dropbox_dir, reclean = False, refeature = True):
 
-    featured_dir = 'CUM/'
-    if reclean:
-        drop_data(dropbox_dir, featured_dir)
+    # featured_dir = 'CUM/'
+    featured_dir = 'data_clean_csv_wins_cumulated/'
+    start_date = 2005
+    end_date = 2017
+    type_cum = 'SeasAvg'
+    # if reclean:
+    #     drop_data(dropbox_dir, featured_dir)
     if refeature:
-        featurize_data(dropbox_dir, featured_dir)
+        featurize_data(dropbox_dir, featured_dir, start_date = start_date, end_date = end_date, type_cum=type_cum,  std=True)
 
 
 
