@@ -20,7 +20,7 @@ class Net(nn.Module):
         self.fc4 = nn.Linear(10,1)
         self.sp = nn.Softplus()
 
-        self.dropout = nn.Dropout(0.5) 
+        self.dropout = nn.Dropout(0.5) #NOT REALLY SURE HOW TO IMPLEMENT WITH TEST
 
     def forward(self, x):
         x = F.relu(self.fc1(x)) #F.relu
