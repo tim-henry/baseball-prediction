@@ -57,6 +57,12 @@ def clean_file(full_name):
 
     # remove/reorganize columns
     raw_data = raw_data.drop(columns=["isWin", "Name", "opp_Name", "GameNum", "opp_GameNum"])
+    to_drop = []
+    for i in range((raw_data.shape[1] - 1) // 2):
+        column = raw_data.columns[i + 1]
+        raw_data[column] = raw_data[column] - raw_data["opp_" + column]
+        to_drop.append("opp_" + column)
+    raw_data = raw_data.drop(columns=to_drop)
 
     return raw_data.values, labels.values
 
@@ -105,9 +111,9 @@ if __name__ == "__main__":
     # TODO use meaningful data.
     dropbox_dir = "/Users/timhenry/Dropbox (MIT)/6.867/"
     in_dir = dropbox_dir + "data_clean_csv_wins"
-    train_seasons = [x for x in range(2000, 2013)]
+    train_seasons = [x for x in range(1950, 2013)]
     test_seasons = [x for x in range(2013, 2017)]
-    input_dim = 57
+    input_dim = 29
 
     # Hyper-params
     hidden_dim = 15  # TODO ?
@@ -124,30 +130,33 @@ if __name__ == "__main__":
     model.train()
     total_correct = 0
     total = 0
-    for season in train_seasons:
-        train_X, train_Y = get_data(in_dir, "GL" + str(season))
+    epochs = 10
+    for epoch in range(epochs):
+        print("--- Epoch " + str(epoch) + " ---")
+        for season in train_seasons:
+            train_X, train_Y = get_data(in_dir, "GL" + str(season))
 
-        season_correct = 0
-        season_total = 0
-        for seq_idx in range(len(train_X)):
-            X, Y = torch.from_numpy(train_X[seq_idx]), torch.from_numpy(train_Y[seq_idx])
-            X = X.to(device)
-            Y = Y.to(device)
+            season_correct = 0
+            season_total = 0
+            for seq_idx in range(len(train_X)):
+                X, Y = torch.from_numpy(train_X[seq_idx][:-1]), torch.from_numpy(train_Y[seq_idx][1:])
+                X = X.to(device)
+                Y = Y.to(device)
 
-            optimizer.zero_grad()
-            Y_pred = model(X, model.init_hidden())
-            loss = criterion(Y_pred, Y.long().float())
-            loss.backward()
+                optimizer.zero_grad()
+                Y_pred = model(X, model.init_hidden())
+                loss = criterion(Y_pred, Y.long().float())
+                loss.backward()
 
-            optimizer.step()
-            num_correct, num_total = get_acc(Y_pred, Y)
-            # print("Acc for season {0}, team {1}: {2:3.3f}".format(season, seq_idx, num_correct / num_total))
-            season_correct += num_correct
-            season_total += num_total
+                optimizer.step()
+                num_correct, num_total = get_acc(Y_pred, Y)
+                # print("Acc for season {0}, team {1}: {2:3.3f}".format(season, seq_idx, num_correct / num_total))
+                season_correct += num_correct
+                season_total += num_total
 
-        print("Season {0} accuracy: {1:3.3f}".format(season, season_correct / season_total))
-        total_correct += season_correct
-        total += season_total
+            print("Season {0} accuracy: {1:3.3f}".format(season, season_correct / season_total))
+            total_correct += season_correct
+            total += season_total
 
     print("Overall accuracy: {0:3.3f}".format(total_correct / total))
     torch.save(model.state_dict(), output_dir + model_name)
