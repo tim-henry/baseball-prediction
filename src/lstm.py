@@ -52,16 +52,22 @@ class Network(nn.ModuleList):
 def clean_file(full_name):
     raw_data = pd.read_csv(full_name)
     n = raw_data.shape[1]
-    seqs = pd.DataFrame(data=np.full((n, 1), np.nan, dtype=np.double))
+
+    raw_data = raw_data.drop(raw_data.index[0])
+    raw_data = raw_data.drop(raw_data.index[0])
     labels = raw_data[["isWin"]]
 
     # remove/reorganize columns
-    raw_data = raw_data.drop(columns=["isWin", "Name", "opp_Name", "GameNum", "opp_GameNum"])
+    raw_data = raw_data.drop(columns=["Unnamed: 0", "isWin", "Name", "opp_Name", "GameNum", "opp_GameNum",
+                                      "cum_isWin", "opp_cum_isWin", "cum_GameNum", "opp_cum_GameNum", "cum_isHome", "opp_cum_isHome"])
+
     to_drop = []
-    for i in range((raw_data.shape[1] - 1) // 2):
+    for i in range((57 - 1) // 2):
         column = raw_data.columns[i + 1]
         raw_data[column] = raw_data[column] - raw_data["opp_" + column]
+        raw_data["cum_" + column] = raw_data["cum_" + column] - raw_data["opp_cum_" + column]
         to_drop.append("opp_" + column)
+        to_drop.append("opp_cum_" + column)
     raw_data = raw_data.drop(columns=to_drop)
 
     return raw_data.values, labels.values
@@ -80,6 +86,7 @@ def get_data(in_dir, year):
                 continue
             seq, label = clean_file(full_name)
             if np.isnan(seq).any() or np.isnan(label).any():
+                print("WARNING: nan's found")
                 continue
             seqs.append(seq)
             labels.append(label)
@@ -87,8 +94,8 @@ def get_data(in_dir, year):
 
 
 # Evaluate
-def get_acc(y_pred, y, burn_index=0):
-    tot = y_pred.shape[0]
+def get_acc(y_pred, y, burn_index=10):
+    tot = y_pred[burn_index:].shape[0]
     y_pred_rnd = torch.round(y_pred).long()
     correct = torch.sum(y_pred_rnd[burn_index:] == y.long()[burn_index:])
     return correct.item(), tot
@@ -108,15 +115,14 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     # Data
-    # TODO use meaningful data.
     dropbox_dir = "/Users/timhenry/Dropbox (MIT)/6.867/"
-    in_dir = dropbox_dir + "data_clean_csv_wins"
-    train_seasons = [x for x in range(1950, 2013)]
-    test_seasons = [x for x in range(2013, 2017)]
-    input_dim = 29
+    in_dir = dropbox_dir + "data_clean_csv_wins_cumulated"
+    train_seasons = [x for x in range(2008, 2013)]
+    test_seasons = [x for x in range(2014, 2017)]
+    input_dim = 57
 
     # Hyper-params
-    hidden_dim = 15  # TODO ?
+    hidden_dim = 9  # TODO ?
     output_dim = 1  # classification
     model = Network(input_dim=input_dim, hidden_dim=hidden_dim, output_dim=output_dim)
     model = model.to(device)
@@ -128,10 +134,11 @@ if __name__ == "__main__":
     # Train
     print("============== Training ==============")
     model.train()
-    total_correct = 0
-    total = 0
+
     epochs = 10
     for epoch in range(epochs):
+        total_correct = 0
+        total = 0
         print("--- Epoch " + str(epoch) + " ---")
         for season in train_seasons:
             train_X, train_Y = get_data(in_dir, "GL" + str(season))
@@ -154,19 +161,19 @@ if __name__ == "__main__":
                 season_correct += num_correct
                 season_total += num_total
 
-            print("Season {0} accuracy: {1:3.3f}".format(season, season_correct / season_total))
+            # print("Season {0} accuracy: {1:3.3f}".format(season, season_correct / season_total))
             total_correct += season_correct
             total += season_total
 
-    print("Overall accuracy: {0:3.3f}".format(total_correct / total))
-    torch.save(model.state_dict(), output_dir + model_name)
+        print("Overall epoch {0} accuracy: {1:3.3f}".format(epoch, total_correct / total))
+        torch.save(model.state_dict(), output_dir + model_name)
 
     # Eval
     print("============== Evaluating ==============")
     model.eval()
     total_correct = 0
     total = 0
-    for season in test_seasons:
+    for season in train_seasons:#test_seasons: TODO
         test_X, test_Y = get_data(in_dir, "GL" + str(season))
 
         season_correct = 0
@@ -179,7 +186,7 @@ if __name__ == "__main__":
             Y_pred = model(X, model.init_hidden())
 
             num_correct, num_total = get_acc(Y_pred, Y)
-            # print("Acc for season {0}, team {1}: {2:3.3f}".format(season, seq_idx, num_correct / num_total))
+            print("Acc for season {0}, team {1}: {2:3.3f}".format(season, seq_idx, num_correct / num_total))
             season_correct += num_correct
             season_total += num_total
 
