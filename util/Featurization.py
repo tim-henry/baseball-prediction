@@ -157,16 +157,16 @@ def featurize_data(dropbox_dir, featured_dir, start_date = None, end_date = None
     # total = total.drop(cols_to_drop)
     total = diff_space(total)
     df_title = 'CUM_CONCAT_{}_{}_{}'.format(type_cum, str(start_date) if start_date is not None else '', str(end_date) if end_date is not None else '')
-    total.to_csv(dropbox_dir + "CUM_CONCAT/{}.csv".format(df_title))
+    total.to_csv(dropbox_dir + "CUM_CONCAT/{}.csv".format(df_title), index=False)
 
 
 def prepare_data(dropbox_dir, reclean = False, refeature = True):
 
     # featured_dir = 'CUM/'
-    featured_dir = 'data_clean_csv_wins_cumulated/'
-    start_date = 2005
+    featured_dir = 'data_clean_csv_wins_cumulated_withplayers/'
+    start_date = 2010
     end_date = 2017
-    type_cum = 'SeasAvg'
+    type_cum = 'SeasAvgPlayers'
     # if reclean:
     #     drop_data(dropbox_dir, featured_dir)
     if refeature:
@@ -179,7 +179,7 @@ def prepare_data(dropbox_dir, reclean = False, refeature = True):
 
 
 if __name__ == "__main__":
-    dropbox_dir = os.path.expanduser("~/Documents/Dropbox/6.867/")
+    dropbox_dir = os.path.expanduser("~/Documents/Dropbox (MIT)/6.867/")
     # dropbox_dir = os.path.expanduser("~")
     # year = '/GL2017'
     # team = '/ANA.txt'
@@ -193,4 +193,3 @@ if __name__ == "__main__":
     # print(team.shape)
     # print(team[cumColNames])
     # print(cumColNames)
-

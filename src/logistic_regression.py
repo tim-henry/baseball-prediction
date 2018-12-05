@@ -45,7 +45,7 @@ for d in max_depth:
 # }
 
 dropbox_dirs = {
-    'Abi':   expanduser("~/Documents/Dropbox/6.867/"),
+    'Abi':   expanduser("~/Documents/Dropbox (MIT)/6.867/"),
     'Tim':   "/Users/timhenry/Dropbox (MIT)/6.867/",
     'Adam':  'FILL HERE'
 }
@@ -79,9 +79,9 @@ def diff_space(df):
 def load_batch(full_name, cols_to_drop):
     global colnames
     try:
-        df = diff_space(pd.read_csv(full_name).drop('isHome', axis=1).iloc[:,1:])
+        df = diff_space(pd.read_csv(full_name, index_col=False).drop('isHome', axis=1))
     except ValueError:
-        df = pd.read_csv(full_name).iloc[:, 1:]
+        df = pd.read_csv(full_name, index_col=False)
 
     df = df.drop(cols_to_drop, axis=1)
     colnames = df.columns[1:]
@@ -209,12 +209,12 @@ if __name__ == "__main__":
     dropbox_dir = dropbox_dirs[username]
     in_dir = dropbox_dir + "CUM_CONCAT/"
 
-    concat_type = 'SeasAvg'
-    start_date = 2005
+    concat_type = 'SeasAvgPlayers'
+    start_date = 2010
     end_date = 2017
     filename = 'CUM_CONCAT_{}_{}_{}.csv'.format(concat_type, start_date, end_date)
 
-    cols_to_drop = ['cum_AwardedFirstOnCatcherInterference', 'cum_Balks', 'cum_CaughtStealing', 'cum_GroundedIntoDoublePlays']
+    cols_to_drop = ['cum_AwardedFirstOnCatcherInterference', 'cum_Balks', 'cum_intentionalWalks','cum_putouts']
     # path = in_dir
     # if not isfile(path):
     #     for f in listdir(path):
