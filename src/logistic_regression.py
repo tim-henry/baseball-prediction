@@ -18,7 +18,7 @@ from sklearn.naive_bayes import GaussianNB
 # ===============================================================================
 
 
-name_to_model = {'Logistic LASSO CV': LogisticRegressionCV(Cs=20, penalty='l1', solver='saga', max_iter = 1e4)
+name_to_model = {'Logistic LASSO CV': LogisticRegressionCV(Cs=5, penalty='l1', solver='saga', max_iter = 1e3)
                  }
 # criteria = ["gini", "entropy"]
 # splitters = ["random"]
@@ -45,7 +45,7 @@ for d in max_depth:
 # }
 
 dropbox_dirs = {
-    'Abi':   expanduser("~/Documents/Dropbox (MIT)/6.867/"),
+    'Abi':   expanduser("~/Documents/Dropbox (MIT)/6.867 - NEW/"),
     'Tim':   "/Users/timhenry/Dropbox (MIT)/6.867/",
     'Adam':  'FILL HERE'
 }
