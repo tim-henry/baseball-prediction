@@ -49,28 +49,66 @@ class Network(nn.ModuleList):
 
 
 # Clean Data
-def clean_file(full_name):
+def clean_file(full_name, year):
     raw_data = pd.read_csv(full_name)
     n = raw_data.shape[1]
 
-    raw_data = raw_data.drop(raw_data.index[0])
-    raw_data = raw_data.drop(raw_data.index[0])
-    labels = raw_data[["isWin"]]
-
     # remove/reorganize columns
-    raw_data = raw_data.drop(columns=["Unnamed: 0", "isWin", "Name", "opp_Name", "GameNum", "opp_GameNum",
-                                      "cum_isWin", "opp_cum_isWin", "cum_GameNum", "opp_cum_GameNum", "cum_isHome", "opp_cum_isHome"])
+    raw_data = raw_data.drop(columns=["Unnamed: 0", "Name", "opp_Name", "GameNum", "opp_GameNum", "cum_isWin",
+                                      "opp_cum_isWin", "cum_GameNum", "opp_cum_GameNum", "cum_isHome",
+                                      "opp_cum_isHome"])
 
     to_drop = []
     for i in range((57 - 1) // 2):
-        column = raw_data.columns[i + 1]
+        column = raw_data.columns[i + 2]
         raw_data[column] = raw_data[column] - raw_data["opp_" + column]
-        raw_data["cum_" + column] = raw_data["cum_" + column] - raw_data["opp_cum_" + column]
+        raw_data["cum_" + column] = - raw_data["opp_cum_" + column] + raw_data["cum_" + column]
         to_drop.append("opp_" + column)
         to_drop.append("opp_cum_" + column)
     raw_data = raw_data.drop(columns=to_drop)
+    raw_data = raw_data.dropna(axis=0)
 
-    return raw_data.values, labels.values
+    raw_data['year'] = int(year[2:])
+
+    return raw_data.drop(columns=["isWin"]).values, raw_data[["isWin"]].values
+
+# Clean Data w/ team vectors
+def clean_file_team(full_name, year):
+    raw_data = pd.read_csv(full_name)
+    team_data = pd.read_csv(dropbox_dir + "teams-one-hot.csv", index_col=0)
+
+    n = raw_data.shape[1]
+
+    team_features = pd.DataFrame(index=raw_data.index, columns=team_data.columns)
+    opp_features = pd.DataFrame(index=raw_data.index, columns=team_data.columns)
+
+    # print(raw_data.get_dtype_counts(), team_features.get_dtype_counts(), opp_features.get_dtype_counts())
+    for idx in range(raw_data.shape[0]):
+        team_features.at[idx] = team_data.loc[raw_data.at[idx, "Name"]]
+        opp_features.at[idx] = team_data.loc[raw_data.at[idx, "opp_Name"]]
+    # opp_features = opp_features.add_prefix("opp_")
+    # temp = team_features.astype('float64').join(opp_features.astype('float64'))
+    # raw_data = pd.merge(raw_data, temp, how='left', left_on=raw_data.index, right_on=temp.index)
+    # raw_data = raw_data.join(team_features.astype('float64')).join(opp_features.astype('float64'))# = pd.concat([raw_data, team_features.astype('float64'), opp_features.astype('float64')], sort=False)
+    # print(raw_data)
+    raw_data = raw_data.join(team_features.astype('float64').sub(opp_features.astype('float64')))
+    # remove/reorganize columns
+    raw_data = raw_data.drop(columns=["Unnamed: 0", "Name", "opp_Name", "GameNum", "opp_GameNum", "cum_isWin",
+                                      "opp_cum_isWin", "cum_GameNum", "opp_cum_GameNum", "cum_isHome",
+                                      "opp_cum_isHome"])
+
+    to_drop = []
+    for i in range((57 - 1) // 2):
+        column = raw_data.columns[i + 2]
+        raw_data[column] = raw_data[column] - raw_data["opp_" + column]
+        raw_data["cum_" + column] = - raw_data["opp_cum_" + column] + raw_data["cum_" + column]
+        to_drop.append("opp_" + column)
+        to_drop.append("opp_cum_" + column)
+    raw_data = raw_data.drop(columns=to_drop)
+    raw_data = raw_data.dropna(axis=0)
+
+    raw_data['year'] = int(year[2:]) - 1975
+    return raw_data.drop(columns=["isWin"]).values, raw_data[["isWin"]].values
 
 # Load Data
 def get_data(in_dir, year):
@@ -84,9 +122,10 @@ def get_data(in_dir, year):
             # ignore hidden files, etc.
             if ext.lower() != "txt" and ext.lower() != "csv":
                 continue
-            seq, label = clean_file(full_name)
+            seq, label = clean_file_team(full_name, year)
             if np.isnan(seq).any() or np.isnan(label).any():
-                print("WARNING: nan's found")
+                # print(year, team_name)
+                print("WARNING: nan's found: ", year, team_name)
                 continue
             seqs.append(seq)
             labels.append(label)
@@ -94,7 +133,7 @@ def get_data(in_dir, year):
 
 
 # Evaluate
-def get_acc(y_pred, y, burn_index=10):
+def get_acc(y_pred, y, burn_index=0):
     tot = y_pred[burn_index:].shape[0]
     y_pred_rnd = torch.round(y_pred).long()
     correct = torch.sum(y_pred_rnd[burn_index:] == y.long()[burn_index:])
@@ -117,12 +156,12 @@ if __name__ == "__main__":
     # Data
     dropbox_dir = "/Users/timhenry/Dropbox (MIT)/6.867/"
     in_dir = dropbox_dir + "data_clean_csv_wins_cumulated"
-    train_seasons = [x for x in range(2008, 2013)]
-    test_seasons = [x for x in range(2014, 2017)]
-    input_dim = 57
+    train_seasons = [x for x in range(1921, 2012)]
+    test_seasons = [x for x in range(2013, 2017)]
+    input_dim = 200
 
     # Hyper-params
-    hidden_dim = 9  # TODO ?
+    hidden_dim = 15  # TODO ?
     output_dim = 1  # classification
     model = Network(input_dim=input_dim, hidden_dim=hidden_dim, output_dim=output_dim)
     model = model.to(device)
@@ -161,7 +200,7 @@ if __name__ == "__main__":
                 season_correct += num_correct
                 season_total += num_total
 
-            # print("Season {0} accuracy: {1:3.3f}".format(season, season_correct / season_total))
+            print("Season {0} accuracy: {1:3.3f}".format(season, season_correct / season_total))
             total_correct += season_correct
             total += season_total
 
@@ -173,13 +212,13 @@ if __name__ == "__main__":
     model.eval()
     total_correct = 0
     total = 0
-    for season in train_seasons:#test_seasons: TODO
+    for season in test_seasons:# TODO
         test_X, test_Y = get_data(in_dir, "GL" + str(season))
 
         season_correct = 0
         season_total = 0
         for seq_idx in range(len(test_X)):
-            X, Y = torch.from_numpy(test_X[seq_idx]), torch.from_numpy(test_Y[seq_idx])
+            X, Y = torch.from_numpy(test_X[seq_idx][:-1]), torch.from_numpy(test_Y[seq_idx][1:])
             X = X.to(device)
             Y = Y.to(device)
 
