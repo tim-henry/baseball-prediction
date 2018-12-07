@@ -182,10 +182,10 @@ def featurize_data(dropbox_dir, featured_dir, start_date = None, end_date = None
 def prepare_data(dropbox_dir, reclean = False, refeature = True):
 
     # featured_dir = 'CUM/'
-    featured_dir = 'data_clean_csv_wins_cumulated_withplayers_MA/'
+    featured_dir = 'data_clean_csv_wins_cumulated_ewm/'
     start_date = 2010
     end_date = 2017
-    type_cum = 'MovAvgPlayers'
+    type_cum = 'ExpWeiAvgPlayers'
     # if reclean:
     #     drop_data(dropbox_dir, featured_dir)
     if refeature:

@@ -37,7 +37,7 @@ name_to_model = {
     "Logistic Regression": LogisticRegression(),
     "Multi Layer Perceptron": MLPClassifier(alpha=1),
     # "Gradient Boosting Classifier": GradientBoostingClassifier(n_estimators=1000),
-    "Linear SVM": SVC(kernel = 'Linear'),
+    "Linear SVM": SVC(kernel = 'linear'),
     'RBF Kernel SVM': SVC(kernel = 'rbf'),
     "Nearest Neighbors": KNeighborsClassifier(),
     "Decision Tree": DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=3, max_features=3),
