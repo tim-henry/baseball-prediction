@@ -18,8 +18,8 @@ from sklearn.naive_bayes import GaussianNB
 # ===============================================================================
 
 
-name_to_model = {'Logistic LASSO CV': LogisticRegressionCV(Cs=5, penalty='l1', solver='saga', max_iter = 1e3)
-                 }
+# name_to_model = {'Logistic LASSO CV': LogisticRegressionCV(Cs=5, penalty='l1', solver='saga', max_iter = 1e3)
+#                  }
 # criteria = ["gini", "entropy"]
 # splitters = ["random"]
 max_depth = [x for x in range(3, 11, 10)]
@@ -27,22 +27,20 @@ max_features = [x for x in range(30, 31, 10)]
 # for c in criteria:
 #     for s in splitters:
 # "DT: c: " + c + ", s:" + s +
-for d in max_depth:
-    for f in max_features:
-        name =  ", d: " + str(d) + ", f: " + str(f)
-        name_to_model[name] = DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=d, max_features=f)
-    # "Naive Bayes": GaussianNB(),
-    # "Logistic Regression": LogisticRegression(),
-    # "Multi Layer Perceptron": MLPClassifier(alpha=1),
-    # "Gradient Boosting Classifier": GradientBoostingClassifier(n_estimators=1000),
-    # "Linear SVM": SVC(),
-    # "Nearest Neighbors": KNeighborsClassifier(),
-    # "Decision Tree": DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=3, max_features=3),
-    # "Decision Tree": DecisionTreeClassifier(),
-    # "Decision Tree": DecisionTreeClassifier(),
-    # "Decision Tree": DecisionTreeClassifier(),
-    # "Decision Tree": DecisionTreeClassifier(),
-# }
+# for d in max_depth:
+#     for f in max_features:
+#         name =  ", d: " + str(d) + ", f: " + str(f)
+#         name_to_model[name] = DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=d, max_features=f)
+
+name_to_model = {
+    "Naive Bayes": GaussianNB(),
+    "Logistic Regression": LogisticRegression(),
+    "Multi Layer Perceptron": MLPClassifier(alpha=1),
+    "Gradient Boosting Classifier": GradientBoostingClassifier(n_estimators=1000),
+    "Linear SVM": SVC(),
+    "Nearest Neighbors": KNeighborsClassifier(),
+    "Decision Tree": DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=3, max_features=3),
+}
 
 dropbox_dirs = {
     'Abi':   expanduser("~/Documents/Dropbox (MIT)/6.867 - NEW/"),
@@ -137,13 +135,13 @@ def batch_classify(X_train, Y_train, X_test, Y_test, wpct, opp_wpct):
         df.loc[i + 1] = [name, train_score, test_score, t_diff]
         df.to_csv("../data/classifier_accuracies.csv")
 
-        dot_data = export_graphviz(model, out_file=None,
-                         feature_names=colnames,
-                         class_names=["Loss", "Win"],
-                         filled=True, rounded=True,
-                         special_characters=True)
-        graph = graphviz.Source(dot_data)
-        graph.render("decision-tree")
+        # dot_data = export_graphviz(model, out_file=None,
+        #                  feature_names=colnames,
+        #                  class_names=["Loss", "Win"],
+        #                  filled=True, rounded=True,
+        #                  special_characters=True)
+        # graph = graphviz.Source(dot_data)
+        # graph.render("decision-tree")
 
     return df
 
@@ -225,5 +223,5 @@ if __name__ == "__main__":
 
     x_train, y_train, x_test, y_test, wpct, opp_wpct = load_batch(join(in_dir, filename), cols_to_drop = cols_to_drop)
     # print(x_train)
-    # batch_classify(x_train, y_train, x_test, y_test, wpct, opp_wpct)
-    log_lasso_cv(x_train, y_train, x_test, y_test)
+    batch_classify(x_train, y_train, x_test, y_test, wpct, opp_wpct)
+    # log_lasso_cv(x_train, y_train, x_test, y_test)
