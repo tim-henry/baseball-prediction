@@ -18,8 +18,8 @@ from sklearn.naive_bayes import GaussianNB
 # ===============================================================================
 
 
-name_to_model = {'Logistic LASSO CV': LogisticRegressionCV(Cs=5, penalty='l1', solver='saga', max_iter = 1e3)
-                 }
+# name_to_model = {'Logistic LASSO CV': LogisticRegressionCV(Cs=5, penalty='l1', solver='saga', max_iter = 1e3)
+#                  }
 # criteria = ["gini", "entropy"]
 # splitters = ["random"]
 max_depth = [x for x in range(3, 11, 10)]
@@ -27,22 +27,21 @@ max_features = [x for x in range(30, 31, 10)]
 # for c in criteria:
 #     for s in splitters:
 # "DT: c: " + c + ", s:" + s +
-for d in max_depth:
-    for f in max_features:
-        name =  ", d: " + str(d) + ", f: " + str(f)
-        name_to_model[name] = DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=d, max_features=f)
-    # "Naive Bayes": GaussianNB(),
-    # "Logistic Regression": LogisticRegression(),
-    # "Multi Layer Perceptron": MLPClassifier(alpha=1),
+# for d in max_depth:
+#     for f in max_features:
+#         name =  ", d: " + str(d) + ", f: " + str(f)
+#         name_to_model[name] = DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=d, max_features=f)
+
+name_to_model = {
+    "Naive Bayes": GaussianNB(),
+    "Logistic Regression": LogisticRegression(),
+    "Multi Layer Perceptron": MLPClassifier(alpha=1),
     # "Gradient Boosting Classifier": GradientBoostingClassifier(n_estimators=1000),
-    # "Linear SVM": SVC(),
-    # "Nearest Neighbors": KNeighborsClassifier(),
-    # "Decision Tree": DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=3, max_features=3),
-    # "Decision Tree": DecisionTreeClassifier(),
-    # "Decision Tree": DecisionTreeClassifier(),
-    # "Decision Tree": DecisionTreeClassifier(),
-    # "Decision Tree": DecisionTreeClassifier(),
-# }
+    "Linear SVM": SVC(kernel = 'Linear'),
+    'RBF Kernel SVM': SVC(kernel = 'rbf'),
+    "Nearest Neighbors": KNeighborsClassifier(),
+    "Decision Tree": DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=3, max_features=3),
+}
 
 dropbox_dirs = {
     'Abi':   expanduser("~/Documents/Dropbox (MIT)/6.867 - NEW/"),
@@ -76,6 +75,28 @@ def diff_space(df):
     return nDF
 
 
+def dropLowGames(df, colStart = 33, threshold = 5):
+    # colnames = df.columns.values[colStart:]
+    new_df = df.iloc[:, colStart:]
+
+    print('Thresholding')
+
+    new_df = df.drop([col for col, val in new_df.iloc[:, colStart:].abs().sum().iteritems()
+             if val < threshold], axis=1)
+
+    numPlayersRemoved = (len(df.columns) - (len(new_df.columns)))
+
+
+    # for k, col in enumerate(colnames):
+    #     column = df[col].values
+    #     #print(col)
+    #     if np.sum(np.abs(column)) < threshold:
+    #         df = df.drop([col], axis = 1)
+    #         numPlayersRemoved = numPlayersRemoved + 1
+
+    print('Number of Players Removed: ' + str(numPlayersRemoved))
+    return(new_df)
+
 def load_batch(full_name, cols_to_drop):
     global colnames
     try:
@@ -83,23 +104,30 @@ def load_batch(full_name, cols_to_drop):
     except ValueError:
         df = pd.read_csv(full_name, index_col=False)
 
+    print("Read CSV.")
+
+    if len(df.columns) > 35:
+        df = dropLowGames(df, colStart = 33, threshold = 50)
+
     df = df.drop(cols_to_drop, axis=1)
     colnames = df.columns[1:]
+
     # print("Colnames: {}".format(list(colnames)))
     wpct = 0#df.columns.get_loc("cum_isWin") - 1
     opp_wpct = 0# df.columns.get_loc("opp_cum_isWin") - 1
 
     array = df.values#[:, 1:]
 
-    np.random.shuffle(array)
+    # np.random.shuffle(array)
 
-    cutoff = int(2./3 * array.shape[0])
+    cutoff = int(3/4 * array.shape[0])
 
     X_train = array[:cutoff, 1:]
     Y_train = array[:cutoff, 0]
     X_test = array[cutoff:, 1:]
     Y_test = array[cutoff:, 0]
 
+    print('Loaded Data.')
     return X_train, Y_train, X_test, Y_test, wpct, opp_wpct
 
 
@@ -126,6 +154,7 @@ def batch_classify(X_train, Y_train, X_test, Y_test, wpct, opp_wpct):
     name_model_pairs = list(name_to_model.items())
     for i in range(len(name_to_model)):
         name, model = name_model_pairs[i]
+        print("Running model {}".format(name))
         t_start = time.clock()
         model.fit(X_train, Y_train)
         t_end = time.clock()
@@ -135,15 +164,16 @@ def batch_classify(X_train, Y_train, X_test, Y_test, wpct, opp_wpct):
         test_score = model.score(X_test, Y_test)
 
         df.loc[i + 1] = [name, train_score, test_score, t_diff]
-        df.to_csv("../data/classifier_accuracies.csv")
+        print("Train Accuracy: {}\tTest Accuracy: {}".format(train_score, test_score))
+        df.to_csv("../data/classifier_accuracies_SeasAvgPlayers.csv")
 
-        dot_data = export_graphviz(model, out_file=None,
-                         feature_names=colnames,
-                         class_names=["Loss", "Win"],
-                         filled=True, rounded=True,
-                         special_characters=True)
-        graph = graphviz.Source(dot_data)
-        graph.render("decision-tree")
+        # dot_data = export_graphviz(model, out_file=None,
+        #                  feature_names=colnames,
+        #                  class_names=["Loss", "Win"],
+        #                  filled=True, rounded=True,
+        #                  special_characters=True)
+        # graph = graphviz.Source(dot_data)
+        # graph.render("decision-tree")
 
     return df
 
@@ -214,7 +244,7 @@ if __name__ == "__main__":
     end_date = 2017
     filename = 'CUM_CONCAT_{}_{}_{}.csv'.format(concat_type, start_date, end_date)
 
-    cols_to_drop = ['cum_AwardedFirstOnCatcherInterference', 'cum_Balks', 'cum_intentionalWalks','cum_putouts']
+    cols_to_drop = ['cum_AwardedFirstOnCatcherInterference', 'cum_Balks', 'cum_intentionalWalks','cum_putouts', 'Season']
     # path = in_dir
     # if not isfile(path):
     #     for f in listdir(path):
@@ -225,5 +255,5 @@ if __name__ == "__main__":
 
     x_train, y_train, x_test, y_test, wpct, opp_wpct = load_batch(join(in_dir, filename), cols_to_drop = cols_to_drop)
     # print(x_train)
-    # batch_classify(x_train, y_train, x_test, y_test, wpct, opp_wpct)
-    log_lasso_cv(x_train, y_train, x_test, y_test)
+    batch_classify(x_train, y_train, x_test, y_test, wpct, opp_wpct)
+    # log_lasso_cv(x_train, y_train, x_test, y_test)
