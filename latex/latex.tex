@@ -1,0 +1,121 @@
+
+\documentclass[10pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage[margin=0.7in]{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb}
+\usepackage{multicol}
+\usepackage{bbm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+\usepackage{cancel}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{fancyhdr}
+\usepackage{tikz-cd} 
+ \usepackage{subfigure}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{}
+\lhead{}
+\chead{}
+\rfoot{Page \thepage}
+
+\def \P {\mathbb{P}}
+\def \bf{\textbf}
+\def \H{\mathcal{H}}
+\def \phi{\varphi}
+\def \R{\mathbb{R}}
+\def \to{\rightarrow}
+\def \t{\text}
+\def \1{\mathbbm{1}}
+\def \E{\mathbb{E}}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+
+\graphicspath{ ./figures/ }
+
+
+\begin{document}
+
+
+\section*{Tables}
+
+
+\subsection*{Classifier Accuracies}
+\begin{tabular}{lrrr}
+\toprule
+                   Name &  Train Acc &  Test Acc &  Training Time (s) \\
+\midrule
+                  Naive &        N/A &       0.503 &                N/A \\
+            Naive Bayes &   0.928755 &  0.921147 &           1.991028 \\
+    Logistic Regression &   0.381167 &  0.179848 &          27.565424 \\
+ Multi Layer Perceptron &   0.995300 &  0.980578 &         205.426692 \\
+\bottomrule
+\end{tabular}
+
+
+
+
+\subsection*{Classifier Accuracies With Exponential Weight Average}
+
+\begin{tabular}{lrrr}
+\toprule
+                   Name &  Train Acc &  Test Acc &  Training Time (s) \\
+\midrule
+                  Naive &        N/A &       0.503 &                N/A \\
+            Naive Bayes &   0.509064 &  0.480931 &           3.057993 \\
+    Logistic Regression &   0.644224 &  0.549497 &           9.519293 \\
+ Multi Layer Perceptron &   0.631282 &  0.550324 &          94.123732 \\
+             Linear SVM &   0.651384 &  0.546055 &        7763.100464 \\
+         RBF Kernel SVM &   0.594796 &  0.534215 &         900.279755 \\
+      Nearest Neighbors &   0.693240 &  0.494699 &           3.032050 \\
+          Decision Tree &   0.505852 &  0.494148 &           0.209065 \\
+\bottomrule
+\end{tabular}
+
+
+\subsection*{Classifier Accuracies With Season Averages}
+\begin{tabular}{lrrr}
+\toprule
+                   Name &  Train Acc &  Test Acc &  Training Time (s) \\
+\midrule
+                  Naive &        N/A &       0.503 &                N/A \\
+            Naive Bayes &   0.541690 &  0.527728 &           0.094646 \\
+    Logistic Regression &   0.545323 &  0.531553 &           1.591043 \\
+ Multi Layer Perceptron &   0.546131 &  0.533656 &          14.179665 \\
+             Linear SVM &   0.541945 &  0.536780 &        1372.157378 \\
+         RBF Kernel SVM &   0.651970 &  0.530469 &         353.081090 \\
+      Nearest Neighbors &   0.699439 &  0.505099 &           0.286905 \\
+          Decision Tree &   0.539756 &  0.528429 &           0.123783 \\
+\bottomrule
+\end{tabular}
+
+
+
+\subsection*{Classifier Accuracies With Season Averages and Players}
+\begin{tabular}{lrrr}
+\toprule
+                   Name &  Train Acc &  Test Acc &  Training Time (s) \\
+\midrule
+                  Naive &        N/A &       0.503 &                N/A \\
+            Naive Bayes &   0.516747 &  0.502382 &           1.739887 \\
+    Logistic Regression &   0.639606 &  0.532525 &           7.985855 \\
+ Multi Layer Perceptron &   0.622756 &  0.540605 &          68.109999 \\
+             Linear SVM &   0.645028 &  0.528486 &       14092.329694 \\
+         RBF Kernel SVM &   0.584807 &  0.545163 &        1793.550069 \\
+      Nearest Neighbors &   0.695235 &  0.504454 &           3.931452 \\
+          Decision Tree &   0.501381 &  0.500104 &           0.206842 \\
+\bottomrule
+\end{tabular}
+
+
+
+
+\end{document}  
