@@ -165,7 +165,7 @@ def batch_classify(X_train, Y_train, X_test, Y_test, wpct, opp_wpct):
 
         df.loc[i + 1] = [name, train_score, test_score, t_diff]
         print("Train Accuracy: {}\tTest Accuracy: {}".format(train_score, test_score))
-        df.to_csv("../data/classifier_accuracies_SeasAvgPlayers.csv")
+        df.to_csv("../data/classifier_accuracies_SeasAvg.csv")
 
         # dot_data = export_graphviz(model, out_file=None,
         #                  feature_names=colnames,
@@ -239,12 +239,12 @@ if __name__ == "__main__":
     dropbox_dir = dropbox_dirs[username]
     in_dir = dropbox_dir + "CUM_CONCAT/"
 
-    concat_type = 'SeasAvgPlayers'
-    start_date = 2010
+    concat_type = 'SeasAvg'
+    start_date = 2005
     end_date = 2017
     filename = 'CUM_CONCAT_{}_{}_{}.csv'.format(concat_type, start_date, end_date)
 
-    cols_to_drop = ['cum_AwardedFirstOnCatcherInterference', 'cum_Balks', 'cum_intentionalWalks','cum_putouts', 'Season']
+    cols_to_drop = ['cum_AwardedFirstOnCatcherInterference', 'cum_Balks', 'cum_intentionalWalks','cum_putouts']
     # path = in_dir
     # if not isfile(path):
     #     for f in listdir(path):

@@ -3,12 +3,13 @@
 import pandas as pd
 import os
 
+dropbox_dir = os.path.expanduser("~/Documents/Dropbox (MIT)/6.867 - NEW/")
 
-dp_filesWithPlayers = '../../ab6.867/data_clean_csv_wins_cumulated_withplayers/'
+dp_filesWithPlayers = dropbox_dir + 'data_clean_csv_wins_cumulated_withplayers/'
 
-dp_fileswithMA = '../../ab6.867/data_clean_csv_wins_cumulated_MA/'
+dp_fileswithMA = dropbox_dir + 'data_clean_csv_wins_cumulated_ewm/'
 
-destination = '../../ab6.867/data_clean_csv_wins_cumulated_withplayers_MA/'
+destination = dropbox_dir + 'data_clean_csv_wins_cumulated_withplayers_ewm/'
 
 
 dates = list(range(2010,2018))
