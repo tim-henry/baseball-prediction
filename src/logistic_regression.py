@@ -165,7 +165,7 @@ def batch_classify(X_train, Y_train, X_test, Y_test, wpct, opp_wpct):
 
         df.loc[i + 1] = [name, train_score, test_score, t_diff]
         print("Train Accuracy: {}\tTest Accuracy: {}".format(train_score, test_score))
-        df.to_csv("../data/classifier_accuracies_ExpWeiAvgPlayers.csv")
+        df.to_csv("../data/classifier_accuracies_MovAvgPlayers.csv")
 
         # dot_data = export_graphviz(model, out_file=None,
         #                  feature_names=colnames,
@@ -239,7 +239,7 @@ if __name__ == "__main__":
     dropbox_dir = dropbox_dirs[username]
     in_dir = dropbox_dir + "CUM_CONCAT/"
 
-    concat_type = 'ExpWeiAvgPlayers'
+    concat_type = 'MovAvgPlayers'
     start_date = 2010
     end_date = 2017
     filename = 'CUM_CONCAT_{}_{}_{}.csv'.format(concat_type, start_date, end_date)
