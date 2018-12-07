@@ -36,8 +36,9 @@ name_to_model = {
     "Naive Bayes": GaussianNB(),
     "Logistic Regression": LogisticRegression(),
     "Multi Layer Perceptron": MLPClassifier(alpha=1),
-    "Gradient Boosting Classifier": GradientBoostingClassifier(n_estimators=1000),
-    "Linear SVM": SVC(),
+    # "Gradient Boosting Classifier": GradientBoostingClassifier(n_estimators=1000),
+    "Linear SVM": SVC(kernel = 'Linear'),
+    'RBF Kernel SVM': SVC(kernel = 'rbf'),
     "Nearest Neighbors": KNeighborsClassifier(),
     "Decision Tree": DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=3, max_features=3),
 }
@@ -110,15 +111,16 @@ def load_batch(full_name, cols_to_drop):
 
     df = df.drop(cols_to_drop, axis=1)
     colnames = df.columns[1:]
+
     # print("Colnames: {}".format(list(colnames)))
     wpct = 0#df.columns.get_loc("cum_isWin") - 1
     opp_wpct = 0# df.columns.get_loc("opp_cum_isWin") - 1
 
     array = df.values#[:, 1:]
 
-    np.random.shuffle(array)
+    # np.random.shuffle(array)
 
-    cutoff = int(2./3 * array.shape[0])
+    cutoff = int(3/4 * array.shape[0])
 
     X_train = array[:cutoff, 1:]
     Y_train = array[:cutoff, 0]
@@ -162,7 +164,8 @@ def batch_classify(X_train, Y_train, X_test, Y_test, wpct, opp_wpct):
         test_score = model.score(X_test, Y_test)
 
         df.loc[i + 1] = [name, train_score, test_score, t_diff]
-        df.to_csv("../data/classifier_accuracies.csv")
+        print("Train Accuracy: {}\tTest Accuracy: {}".format(train_score, test_score))
+        df.to_csv("../data/classifier_accuracies_SeasAvgPlayers.csv")
 
         # dot_data = export_graphviz(model, out_file=None,
         #                  feature_names=colnames,
@@ -241,7 +244,7 @@ if __name__ == "__main__":
     end_date = 2017
     filename = 'CUM_CONCAT_{}_{}_{}.csv'.format(concat_type, start_date, end_date)
 
-    cols_to_drop = ['cum_AwardedFirstOnCatcherInterference', 'cum_Balks', 'cum_intentionalWalks','cum_putouts']
+    cols_to_drop = ['cum_AwardedFirstOnCatcherInterference', 'cum_Balks', 'cum_intentionalWalks','cum_putouts', 'Season']
     # path = in_dir
     # if not isfile(path):
     #     for f in listdir(path):
