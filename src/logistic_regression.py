@@ -74,12 +74,39 @@ def diff_space(df):
     return nDF
 
 
+def dropLowGames(df, colStart = 33, threshold = 5):
+    # colnames = df.columns.values[colStart:]
+    new_df = df.iloc[:, colStart:]
+
+    print('Thresholding')
+
+    new_df = df.drop([col for col, val in new_df.iloc[:, colStart:].abs().sum().iteritems()
+             if val < threshold], axis=1)
+
+    numPlayersRemoved = (len(df.columns) - (len(new_df.columns)))
+
+
+    # for k, col in enumerate(colnames):
+    #     column = df[col].values
+    #     #print(col)
+    #     if np.sum(np.abs(column)) < threshold:
+    #         df = df.drop([col], axis = 1)
+    #         numPlayersRemoved = numPlayersRemoved + 1
+
+    print('Number of Players Removed: ' + str(numPlayersRemoved))
+    return(new_df)
+
 def load_batch(full_name, cols_to_drop):
     global colnames
     try:
         df = diff_space(pd.read_csv(full_name, index_col=False).drop('isHome', axis=1))
     except ValueError:
         df = pd.read_csv(full_name, index_col=False)
+
+    print("Read CSV.")
+
+    if len(df.columns) > 35:
+        df = dropLowGames(df, colStart = 33, threshold = 50)
 
     df = df.drop(cols_to_drop, axis=1)
     colnames = df.columns[1:]
@@ -98,6 +125,7 @@ def load_batch(full_name, cols_to_drop):
     X_test = array[cutoff:, 1:]
     Y_test = array[cutoff:, 0]
 
+    print('Loaded Data.')
     return X_train, Y_train, X_test, Y_test, wpct, opp_wpct
 
 
@@ -124,6 +152,7 @@ def batch_classify(X_train, Y_train, X_test, Y_test, wpct, opp_wpct):
     name_model_pairs = list(name_to_model.items())
     for i in range(len(name_to_model)):
         name, model = name_model_pairs[i]
+        print("Running model {}".format(name))
         t_start = time.clock()
         model.fit(X_train, Y_train)
         t_end = time.clock()
