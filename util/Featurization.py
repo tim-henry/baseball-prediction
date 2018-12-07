@@ -101,20 +101,37 @@ def diff_space(df):
     Put a dataframe into diff space
     '''
     # print(df.columns)
-    Y = df[['isWin', 'isHome']]
+    # player_cols = [col for col in df.columns if col[-1].isdigit() and col[-2].isdigit() and col[-3].isdigit() and len(col) == 8]
+    # team_cols = [col for col in player_cols if not col.startswith('opp')]
+    # opp_cols = [col for col in player_cols if col.startswith('opp')]
 
-    X = df.drop(['isWin', 'isHome'], axis=1)
+    not_to_diff = ['Season', 'isWin', 'isHome']
+    Y = df[not_to_diff]
+    # P = df[player_cols]
+    # try:
+    #     X = df.drop(['isWin', 'isHome', 'Unnamed: 0', 'Name', 'opp_Name'], axis=1)
+    # except ValueError:
+    # X = df.drop(not_to_diff+player_cols, axis=1)
+    X = df.drop(not_to_diff, axis=1)
 
-    nVars = int(X.shape[1]/2)
+    home_filter = [col for col in X.columns if not col.startswith('opp')]
+    opp_filter = [col for col in X.columns if col.startswith('opp')]
+    # filter_col = [col for col in df if col.startswith('Home_Starter')]
+    # filter_col = [col for col in df[filter_col] if col.endswith('ID')]
+    # df = gameDF[filter_col]
 
-    XTeam = X.iloc[:, 0:nVars]
-    XOpp = X.iloc[:, nVars:]
+    # XTeam = X.iloc[:, 0:nVars]
+    # XOpp = X.iloc[:, nVars:]
+
+    XTeam = X[home_filter]
+    XOpp = X[opp_filter]
 
     # print(list(XTeam))
 
     XDiff = pd.DataFrame(XTeam.values - XOpp.values)
     XDiff.columns = list(XTeam)
 
+    # nDF = pd.concat([Y.reset_index(drop=True), XDiff, P.reset_index(drop=True)], axis=1).drop('cum_GameNum', axis=1)
     nDF = pd.concat([Y.reset_index(drop=True), XDiff], axis=1).drop('cum_GameNum', axis=1)
 
     return nDF
@@ -147,26 +164,28 @@ def featurize_data(dropbox_dir, featured_dir, start_date = None, end_date = None
                     else:
                         scaler = preprocessing.MinMaxScaler()
                     vals_scaled = scaler.fit_transform(vals_to_std)
+                    team_df['Season'] = curr_year
                     team_df[np.array(cumColNames)] = vals_scaled
                     total = total.append(team_df)
 
-    cols_to_keep = ['isWin', 'isHome'] + cumColNames
+    cols_to_keep = ['Season', 'isWin', 'isHome'] + cumColNames + [col for col in total.columns if col[-1].isdigit() and col[-2].isdigit() and col[-3].isdigit() and (len(col) == 8 or len(col) == 12)]
+    # print(cols_to_keep)
     total = total[cols_to_keep]
     # cols_to_drop = ['cum_isWin', 'cum_isHome', 'cum_GameNum',
     #                 'opp_cum_isWin', 'opp_cum_isHome', 'opp_cum_GameNum']
     # total = total.drop(cols_to_drop)
     total = diff_space(total)
     df_title = 'CUM_CONCAT_{}_{}_{}'.format(type_cum, str(start_date) if start_date is not None else '', str(end_date) if end_date is not None else '')
-    total.to_csv(dropbox_dir + "CUM_CONCAT/{}.csv".format(df_title))
+    total.to_csv(dropbox_dir + "CUM_CONCAT/{}.csv".format(df_title), index=False)
 
 
 def prepare_data(dropbox_dir, reclean = False, refeature = True):
 
     # featured_dir = 'CUM/'
-    featured_dir = 'data_clean_csv_wins_cumulated/'
-    start_date = 2005
+    featured_dir = 'data_clean_csv_wins_cumulated_withplayers/'
+    start_date = 2010
     end_date = 2017
-    type_cum = 'SeasAvg'
+    type_cum = 'SeasAvgPlayers'
     # if reclean:
     #     drop_data(dropbox_dir, featured_dir)
     if refeature:
@@ -179,7 +198,7 @@ def prepare_data(dropbox_dir, reclean = False, refeature = True):
 
 
 if __name__ == "__main__":
-    dropbox_dir = os.path.expanduser("~/Documents/Dropbox/6.867/")
+    dropbox_dir = os.path.expanduser("~/Documents/Dropbox (MIT)/6.867 - NEW/")
     # dropbox_dir = os.path.expanduser("~")
     # year = '/GL2017'
     # team = '/ANA.txt'
@@ -193,4 +212,3 @@ if __name__ == "__main__":
     # print(team.shape)
     # print(team[cumColNames])
     # print(cumColNames)
-
