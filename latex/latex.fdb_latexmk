@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1544202717 "c:/Users/Abi Shalom/Documents/GitHub/baseball-prediction/latex/latex.tex" "latex.pdf" "latex" 1544202792
+["pdflatex"] 1544202916 "c:/Users/Abi Shalom/Documents/GitHub/baseball-prediction/latex/latex.tex" "latex.pdf" "latex" 1544202918
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1233951848 1004 54797486969f23fa377b128694d548df ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1233951854 916 f87d7c45f9c908e672703b83b72241a3 ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/amsfonts/symbols/msam5.tfm" 1233951854 924 9904cf1d39e9767e7a3622f2a125a565 ""
@@ -135,10 +135,10 @@
   "C:/Program Files/MiKTeX 2.9/tex/latex/xkeyval/xkeyval.sty" 1419270738 5114 9c1069474ff71dbc47d5006555e352d3 ""
   "C:/Users/Abi Shalom/AppData/Local/MiKTeX/2.9/miktex/data/le/pdftex/pdflatex.fmt" 1518064132 4061338 29279af0719fa889c7ba51ad71ffa433 ""
   "C:/Users/Abi Shalom/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map" 1540315771 80423 3cfba73105275d3ad410701d89fbdf7a ""
-  "c:/Users/Abi Shalom/Documents/GitHub/baseball-prediction/latex/latex.tex" 1544202713 4320 da39432791f4ae539404ea7079959df9 ""
-  "latex.aux" 1544202792 47 9108cb1e5d0715b696fc51716bdec3e1 ""
-  "latex.tex" 1544202713 4320 da39432791f4ae539404ea7079959df9 ""
+  "c:/Users/Abi Shalom/Documents/GitHub/baseball-prediction/latex/latex.tex" 1544202915 4320 da39432791f4ae539404ea7079959df9 ""
+  "latex.aux" 1544202917 47 9108cb1e5d0715b696fc51716bdec3e1 ""
+  "latex.tex" 1544202915 4320 da39432791f4ae539404ea7079959df9 ""
   (generated)
-  "latex.log"
   "latex.pdf"
+  "latex.log"
   "latex.aux"
