@@ -41,6 +41,7 @@ name_to_model = {
     'RBF Kernel SVM': SVC(kernel = 'rbf'),
     "Nearest Neighbors": KNeighborsClassifier(),
     "Decision Tree": DecisionTreeClassifier(criterion="gini", splitter="best", max_depth=3, max_features=3),
+    'Logistic LASSO CV': LogisticRegressionCV(Cs=5, penalty='l1', solver='saga')
 }
 
 dropbox_dirs = {
@@ -165,7 +166,7 @@ def batch_classify(X_train, Y_train, X_test, Y_test, wpct, opp_wpct):
 
         df.loc[i + 1] = [name, train_score, test_score, t_diff]
         print("Train Accuracy: {}\tTest Accuracy: {}".format(train_score, test_score))
-        df.to_csv("../data/classifier_accuracies_MovAvgPlayers.csv")
+        df.to_csv("../data/classifier_accuracies_ExpWeiAvgPlayers20.csv")
 
         # dot_data = export_graphviz(model, out_file=None,
         #                  feature_names=colnames,
@@ -200,8 +201,10 @@ def log_lasso_cv(x_train, y_train, x_test, y_test):
     """
 
     model = name_to_model['Logistic LASSO CV']
+    print("Fitting Log LASSO")
 
     model.fit(x_train, y_train)
+    print("Fitting completed.")
     # best_C = model.C_
     coeffs = model.coef_[0]
     print(coeffs)
@@ -229,6 +232,7 @@ def log_lasso_cv(x_train, y_train, x_test, y_test):
     # print(model.coefs_paths_[1][best_C_index][-1])
 
 
+
 # =======================================================================================
 
 
@@ -244,6 +248,8 @@ if __name__ == "__main__":
     end_date = 2017
     filename = 'CUM_CONCAT_{}_{}_{}.csv'.format(concat_type, start_date, end_date)
 
+    print("Running on {}".format(concat_type))
+
     cols_to_drop = ['cum_AwardedFirstOnCatcherInterference', 'cum_Balks', 'cum_intentionalWalks','cum_putouts', 'Season']
     # path = in_dir
     # if not isfile(path):
@@ -255,5 +261,5 @@ if __name__ == "__main__":
 
     x_train, y_train, x_test, y_test, wpct, opp_wpct = load_batch(join(in_dir, filename), cols_to_drop = cols_to_drop)
     # print(x_train)
-    batch_classify(x_train, y_train, x_test, y_test, wpct, opp_wpct)
-    # log_lasso_cv(x_train, y_train, x_test, y_test)
+    # batch_classify(x_train, y_train, x_test, y_test, wpct, opp_wpct)
+    log_lasso_cv(x_train, y_train, x_test, y_test)
