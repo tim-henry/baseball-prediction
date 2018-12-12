@@ -11,7 +11,7 @@ import os
 #destination = '../data/dest/'
 
 datapath = '../../ab6.867/data_clean_csv_wins/'
-destination = '../../ab6.867/data_clean_csv_wins_cumulated/'
+destination = '../../ab6.867/data_clean_csv_wins_cumulated_MA/'
 
 leavout  = ['Name','opp_Name']
 #df.drop('b', axis=1)
@@ -21,14 +21,14 @@ featureBoundsU = 31
 #---------------------------------------------------
 
 
-def cumulative(teamName = 'BOS', gameNumber = 20):
+def cumulative(teamName = 'BOS', gameNumber = 20, MA = 15):
 	'''Takes a team name and computes its cumulative stats up to a game number'''
-	if gameNumber == 1:
+	if gameNumber <= MA +1:
 		print('CANNOT GET CUMULATIVE DATA FOR FIRST GAME')
 		return(None)
 	else:
 		try:
-			df = pd.read_csv(datapath + teamName + '.csv').iloc[0:gameNumber-1,:]
+			df = pd.read_csv(datapath + teamName + '.csv').iloc[gameNumber-1-MA:gameNumber-1,:]
 
 			colNames = df.columns
 
@@ -36,7 +36,7 @@ def cumulative(teamName = 'BOS', gameNumber = 20):
 				if (colNames[k] in leavout) or ('opp_' in colNames[k]):
 					df = df.drop(colNames[k], axis = 1)
 
-			avs = df.sum(axis = 0).values / (gameNumber)
+			avs = df.sum(axis = 0).values / (MA)
 
 			colNames = df.columns
 
@@ -166,14 +166,14 @@ def main(destination = destination, datapath = datapath):
 
 if __name__ == '__main__':
 
-	years = list(range(2005,2018))
+	years = list(range(1921,2018))
 
 	for y , year in enumerate(years):
 		print('YEAR:    ' + str(year))
 		folder = 'GL' + str(year)
 
 		datapath = '../../ab6.867/data_clean_csv_wins/' + folder + '/'
-		destination = '../../ab6.867/data_clean_csv_wins_cumulated/' + folder + '/'
+		destination = '../../ab6.867/data_clean_csv_wins_cumulated_MA/' + folder + '/'
 
 		main(destination = destination, datapath = datapath)
 		#print(datapath + ' DOES NOT EXIST')

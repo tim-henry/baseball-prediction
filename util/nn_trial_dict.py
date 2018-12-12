@@ -9,8 +9,9 @@ import random
 
 datapath = '../../ab6.867/CUM_CONCAT/'
 #name = 'CUM_CONCAT_SeasAvgPlayers_2010_2017'
-name = 'CUM_CONCAT_MovAvgPlayers_2010_2017'
-#name = 'CUM_CONCAT_SeasAvg_2005_2017'
+#name = 'CUM_CONCAT_MovAvgPlayers_2010_2017'
+name = 'CUM_CONCAT_ExpWeiAvgPlayers10_2010_2017'
+#name = 'CUM_CONCAT'
 #name = 'players_mixture_num_degrees3'
 #name = 'players_pca_num_degrees3'
 #name = 'players_mixture_num_degrees6'
@@ -18,14 +19,14 @@ name = 'CUM_CONCAT_MovAvgPlayers_2010_2017'
 class Net(nn.Module):
     def __init__(self, inputSize = 22):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(inputSize,30)
-        self.fc2 = nn.Linear(30, 10)
-        #self.fc3 = nn.Linear(50, 50)
+        self.fc1 = nn.Linear(inputSize,100)
+        self.fc2 = nn.Linear(100, 10)
+        #self.fc3 = nn.Linear(50, 10)
         #self.fc4 = nn.Linear(50,10)
         self.fc5 = nn.Linear(10,1)
         self.sp = nn.Softplus()
 
-        self.dropout = nn.Dropout(0.90) #NOT REALLY SURE HOW TO IMPLEMENT WITH TEST
+        self.dropout = nn.Dropout(0.90) 
 
     def forward(self, x):
         x = F.relu(self.fc1(x)) #F.relu
@@ -46,7 +47,7 @@ def train(net, data, targets, optimizer, epochs = 10000):
     net.train()
     criterion = nn.MSELoss()
 
-    for k in range(0,epochs):
+    for k in range(0,epochs + 1):
         optimizer.zero_grad()   # zero the gradient buffers
         output = net(data)
         loss = criterion(output, targets)
@@ -98,7 +99,7 @@ def dropLowGames(df, colStart = 33, threshold = 5):
     return(new_df)
 
 
-def training_proceedure(lr = 0.01, epochs = 2000, name = name, kfolds = 2, TtoV = 3, datapath = datapath, playerThreshhold = 5):
+def training_proceedure(lr = 0.01, epochs = 2000, name = name, kfolds = 2, TtoV = 3, datapath = datapath, playerThreshhold = 5, weight_decay = 1e-3):
 
     df = pd.read_csv(datapath + name + '.csv')
     df = df.drop(['Season'], axis = 1)
@@ -118,7 +119,7 @@ def training_proceedure(lr = 0.01, epochs = 2000, name = name, kfolds = 2, TtoV 
     for fold in range(0,kfolds):
         #train_idx  = random.sample(range(0, df.shape[0]), trainSize)
         #test_idx = [v for i, v in enumerate(range(0,df.shape[0])) if i not in train_idx]
-        train_idx = list(range(0,int(np.ceil(0.9 * df.shape[0]))))
+        train_idx = list(range(0,int(np.ceil(0.8 * df.shape[0]))))
         test_idx = list(range(train_idx[-1],int(df.shape[0])))
         print('Indices Generated')
 
@@ -138,7 +139,7 @@ def training_proceedure(lr = 0.01, epochs = 2000, name = name, kfolds = 2, TtoV 
         device = torch.device('cpu')
         net = Net(inputSize = inputSize).to(device)
         net.train()
-        optimizer = optim.Adam(net.parameters())#, weight_decay = 1e-3)
+        optimizer = optim.Adam(net.parameters(), weight_decay = weight_decay)
         #optimizer = optim.RMSProp(net.paramerters(dsofn;sdfj)) or SGD
 
         #print('training')
@@ -174,7 +175,7 @@ def training_proceedure(lr = 0.01, epochs = 2000, name = name, kfolds = 2, TtoV 
 
 '''
 solid:
-200 epochs
+200 
 0.9 dropout each layer
 layers 100 / 10 / 1
 test 57
@@ -227,11 +228,94 @@ Train Loss: 0.2182788848876953
 '''
 
 
+'''
+moving average / unorderesd
+ / 100 / 10 / 1
+ dropout 0.9
+ weight_decay 1e-3
+ iters 5000
+ training: 55
+ test: 57
+ ------------------------
+ moving average / orderesd
+ / 100 / 10 / 1
+ dropout 0.9
+ weight_decay 1e-3
+ iters 5000
+ training: 56
+ test: 55.5
 
+ Iteration 0 Loss: 0.2550833523273468
+        Accuracy: 0.49769239025437373
+Iteration 1000 Loss: 0.24491485953330994
+        Accuracy: 0.5585488891274015
+Iteration 2000 Loss: 0.24413560330867767
+        Accuracy: 0.5580837894887481
+Iteration 3000 Loss: 0.24334731698036194
+        Accuracy: 0.5612321562734786
+Iteration 4000 Loss: 0.24283769726753235
+        Accuracy: 0.5609101642159493
+Train Loss: 0.24379172921180725
+***Test Loss: 0.2465457171201706
+***Test Accuracy: 0.5552375500858615
 
+----------------------
+ moving average / orderesd
+ / 100 / 10 / 1
+ dropout 0.5
+ weight_decay 1e-3
+ iters 5000
+ training: 78
+ test: 52.8
 
+ Iteration 0 Loss: 0.2503645718097687
+        Accuracy: 0.4956888841186362
+Iteration 1000 Loss: 0.17746594548225403
+        Accuracy: 0.7511359164251726
+Iteration 2000 Loss: 0.16327017545700073
+        Accuracy: 0.7738900218239061
+Iteration 3000 Loss: 0.15997707843780518
+        Accuracy: 0.7807234088225824
+Iteration 4000 Loss: 0.15813791751861572
+        Accuracy: 0.7821902615291045
+Train Loss: 0.15713895857334137
+***Test Loss: 0.284803569316864
+***Test Accuracy: 0.5280480824270177
+-----------------------------
+ moving average / orderesd
+ / 100 / 10 / 1
+ dropout 0.9
+ weight_decay 1e-2
+ iters 10000
+ training: 
+ test: 
+ converges in two seconds
+ -----------------------------
+  moving average / orderesd
+  / 100 / 50 / 10 / 1
+   dropout 0.9
+    weight_decay 1e-4
+    iters 1000
 
-
+Thresholding
+Number of Players Removed: 570
+inputSize:1252
+Indices Generated
+Training...
+Iteration 0 Loss: 0.256178617477417
+        Accuracy: 0.4998390039712354
+Iteration 1000 Loss: 0.23106715083122253
+        Accuracy: 0.5904261028227971
+Iteration 2000 Loss: 0.22261376678943634
+        Accuracy: 0.6067045901756646
+Iteration 3000 Loss: 0.2193688154220581
+        Accuracy: 0.6136095309649029
+Iteration 4000 Loss: 0.21827976405620575
+        Accuracy: 0.615147937461987
+Train Loss: 0.2181186079978943
+***Test Loss: 0.2989087402820587
+***Test Accuracy: 0.5314825414997137
+'''
 
 
 #def main():
@@ -240,7 +324,7 @@ Train Loss: 0.2182788848876953
 
 
 if __name__ == '__main__':
-    training_proceedure(lr = 0.01, name = name, datapath = datapath, epochs = 3000, kfolds = 1, playerThreshhold = 50)
+    training_proceedure(weight_decay = 5e-3,lr = 0.01, name = name, datapath = datapath, epochs = 10000, kfolds = 1, playerThreshhold = 50)
 
 
 
