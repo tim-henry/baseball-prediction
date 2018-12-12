@@ -10,7 +10,7 @@ from scipy.stats import chi2
 
 #---------------------------------------------------
 
-source = '../../ab6.867/CUM_CONCAT/'
+source = '../../ab6.867/CUM_CONCAT_SeasAvg_2005_2017/'
 destination = './HYPTEST'
 leavout  = ['Name','opp_Name']
 
@@ -89,7 +89,7 @@ def indep_test(df, var1Col= 'isWin', var2Col = 'cum_isWin', var2Space = [-0.5,0,
 
 
 def main():
-	df = pd.read_csv('../../ab6.867/CUM_CONCAT/CUM_CONCAT.csv').drop('isHome', axis = 1).iloc[:,1:]
+	df = pd.read_csv('../../ab6.867/CUM_CONCAT/CUM_CONCAT_SeasAvg_2005_2017.csv').drop('isHome', axis = 1).iloc[:,1:]
 
 	df = diff_space(df)
 
@@ -100,7 +100,7 @@ def main():
 
 	testVars.remove('cum_GameNum')
 	testVars.remove('cum_isHome')
-	testVars.remove('cum_AwardedFirstOnCatcherInterference')
+	#testVars.remove('cum_AwardedFirstOnCatcherInterference')
 
 	for test in testVars:
 		#print('Variable: ' + str(testNum))

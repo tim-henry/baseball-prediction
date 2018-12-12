@@ -10,7 +10,7 @@ import random
 datapath = '../../ab6.867/CUM_CONCAT/'
 #name = 'CUM_CONCAT_SeasAvgPlayers_2010_2017'
 name = 'CUM_CONCAT_MovAvgPlayers_2010_2017'
-#name = 'CUM_CONCAT_SeasAvg_2005_2017'
+#name = 'CUM_CONCAT'
 #name = 'players_mixture_num_degrees3'
 #name = 'players_pca_num_degrees3'
 #name = 'players_mixture_num_degrees6'
@@ -18,20 +18,20 @@ name = 'CUM_CONCAT_MovAvgPlayers_2010_2017'
 class Net(nn.Module):
     def __init__(self, inputSize = 22):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(inputSize,30)
-        self.fc2 = nn.Linear(30, 10)
+        self.fc1 = nn.Linear(inputSize,100)
+        self.fc2 = nn.Linear(100, 10)
         #self.fc3 = nn.Linear(50, 50)
         #self.fc4 = nn.Linear(50,10)
         self.fc5 = nn.Linear(10,1)
         self.sp = nn.Softplus()
 
-        self.dropout = nn.Dropout(0.90) #NOT REALLY SURE HOW TO IMPLEMENT WITH TEST
+        self.dropout = nn.Dropout(0.50) #NOT REALLY SURE HOW TO IMPLEMENT WITH TEST
 
     def forward(self, x):
         x = F.relu(self.fc1(x)) #F.relu
         x = self.dropout(x)
         x = F.relu(self.fc2(x))
-        #x = self.dropout(x)
+        x = self.dropout(x)
         #x = F.relu(self.fc3(x))
         #x = self.dropout(x)
         #x = F.relu(self.fc4(x))
@@ -116,10 +116,10 @@ def training_proceedure(lr = 0.01, epochs = 2000, name = name, kfolds = 2, TtoV 
     #testSize = 50
 
     for fold in range(0,kfolds):
-        #train_idx  = random.sample(range(0, df.shape[0]), trainSize)
-        #test_idx = [v for i, v in enumerate(range(0,df.shape[0])) if i not in train_idx]
-        train_idx = list(range(0,int(np.ceil(0.9 * df.shape[0]))))
-        test_idx = list(range(train_idx[-1],int(df.shape[0])))
+        train_idx  = random.sample(range(0, df.shape[0]), trainSize)
+        test_idx = [v for i, v in enumerate(range(0,df.shape[0])) if i not in train_idx]
+        #train_idx = list(range(0,int(np.ceil(0.9 * df.shape[0]))))
+        #test_idx = list(range(train_idx[-1],int(df.shape[0])))
         print('Indices Generated')
 
 
@@ -138,7 +138,7 @@ def training_proceedure(lr = 0.01, epochs = 2000, name = name, kfolds = 2, TtoV 
         device = torch.device('cpu')
         net = Net(inputSize = inputSize).to(device)
         net.train()
-        optimizer = optim.Adam(net.parameters())#, weight_decay = 1e-3)
+        optimizer = optim.Adam(net.parameters(), weight_decay = 1e-3)
         #optimizer = optim.RMSProp(net.paramerters(dsofn;sdfj)) or SGD
 
         #print('training')
@@ -227,20 +227,13 @@ Train Loss: 0.2182788848876953
 '''
 
 
-
-
-
-
-
-
-
 #def main():
 #    #slkfdn
 #    df = pd.read_csv(datapath + name + '.csv')
 
 
 if __name__ == '__main__':
-    training_proceedure(lr = 0.01, name = name, datapath = datapath, epochs = 3000, kfolds = 1, playerThreshhold = 50)
+    training_proceedure(lr = 0.01, name = name, datapath = datapath, epochs = 7000, kfolds = 1, playerThreshhold = 50)
 
 
 
