@@ -182,16 +182,77 @@ def featurize_data(dropbox_dir, featured_dir, start_date = None, end_date = None
 def prepare_data(dropbox_dir, reclean = False, refeature = True):
 
     # featured_dir = 'CUM/'
-    featured_dir = 'data_clean_csv_wins_cumulated_withplayers_ewm/'
+    featured_dir = 'data_clean_csv_wins_cumulated_withplayers_ewm_20/'
     start_date = 2010
     end_date = 2017
-    type_cum = 'ExpWeiAvgPlayers'
+    type_cum = 'ExpWeiAvgPlayers20'
     # if reclean:
     #     drop_data(dropbox_dir, featured_dir)
     if refeature:
         featurize_data(dropbox_dir, featured_dir, start_date = start_date, end_date = end_date, type_cum=type_cum,  std=True)
 
 
+def cluster_featurize(dropbox_dir, featured_dir, start_date = None, end_date = None, type_cum = '', std=True):
+    """
+    Function to standardize data.
+    Std = True for standard Gaussian, False for min/max standardization
+    Returns concatenated and standardized dataframe
+    """
+    total = pd.DataFrame()
+    for year in os.listdir(dropbox_dir+featured_dir):
+        bef= True
+        aft = True
+        curr_year = int(year[-4:])
+        if start_date is not None:
+            bef = start_date <= curr_year
+        if end_date is not None:
+            aft = curr_year <= end_date
+        if bef and aft:
+            print("Working on files in: {}".format(str(curr_year)))
+            for team in os.listdir(dropbox_dir + featured_dir + year):
+                data_filename = dropbox_dir + featured_dir + year + '/' + team
+                with open(data_filename) as f:
+                    team_df = pd.read_csv(f).dropna()
+                    to_std = team_df[np.array(cumColNames)]
+                    vals_to_std = to_std.values
+                    if std:
+                        scaler = preprocessing.StandardScaler()
+                    else:
+                        scaler = preprocessing.MinMaxScaler()
+                    vals_scaled = scaler.fit_transform(vals_to_std)
+                    team_df['Season'] = curr_year
+                    team_df[np.array(cumColNames)] = vals_scaled
+                    total = total.append(team_df)
+
+    cols_to_keep = ['Season', 'isWin', 'isHome'] + cumColNames + [col for col in total.columns if col[-1].isdigit() and col[-2].isdigit() and col[-3].isdigit() and (len(col) == 8 or len(col) == 12)]
+    # print(cols_to_keep)
+    total = total[cols_to_keep]
+    # cols_to_drop = ['cum_isWin', 'cum_isHome', 'cum_GameNum',
+    #                 'opp_cum_isWin', 'opp_cum_isHome', 'opp_cum_GameNum']
+    # total = total.drop(cols_to_drop)
+    total = diff_space(total)
+    return total
+    # df_title = 'CUM_CONCAT_{}_{}_{}'.format(type_cum, str(start_date) if start_date is not None else '', str(end_date) if end_date is not None else '')
+    # total.to_csv(dropbox_dir + "CUM_CONCAT/{}.csv".format(df_title), index=False)
+
+
+
+def prepare_cluster_data(dropbox_dir):
+    data_dir = 'data_clean_csv_wins_cumulated_withplayers_transformed/'
+    start_date = 2010
+    end_date = 2017
+    type_cum = 'players_transformed'
+
+    new_dir = dropbox_dir + 'CUM_CONCAT'
+
+    og_path = dropbox_dir + data_dir
+
+    for type_mixture in os.listdir(og_path):
+        for num_deg in os.listdir(og_path + '/' + type_mixture):
+            curr_path = '/{}/{}'.format(type_mixture, num_deg)
+            print("Working on files in {}".format(curr_path))
+            temp_df = cluster_featurize(og_path, curr_path + '/', start_date = start_date, end_date = end_date, type_cum = type_cum)
+            temp_df.to_csv('{}/Transformed/{}/{}/players_{}_{}.csv'.format(new_dir, type_mixture, num_deg, type_mixture, num_deg), index=False)
 
 
 
@@ -206,9 +267,5 @@ if __name__ == "__main__":
     #     team = pd.read_csv(f)
     #     print(team.shape)
     # print(os.listdir(dropbox_dir))
-    prepare_data(dropbox_dir, reclean = False, refeature = True)
-    # f = open(dropbox_dir + 'CUM/DUMMY/ANA.csv')
-    # team = pd.read_csv(f)
-    # print(team.shape)
-    # print(team[cumColNames])
-    # print(cumColNames)
+    # prepare_data(dropbox_dir, reclean = False, refeature = True)
+    prepare_cluster_data(dropbox_dir)
