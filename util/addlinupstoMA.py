@@ -7,9 +7,9 @@ dropbox_dir = os.path.expanduser("~/Documents/Dropbox (MIT)/6.867 - NEW/")
 
 dp_filesWithPlayers = dropbox_dir + 'data_clean_csv_wins_cumulated_withplayers/'
 
-dp_fileswithMA = dropbox_dir + 'data_clean_csv_wins_cumulated_ewm/'
+dp_fileswithMA = dropbox_dir + 'data_clean_csv_wins_cumulated_ewm_20/'
 
-destination = dropbox_dir + 'data_clean_csv_wins_cumulated_withplayers_ewm/'
+destination = dropbox_dir + 'data_clean_csv_wins_cumulated_withplayers_ewm_20/'
 
 
 dates = list(range(2010,2018))
